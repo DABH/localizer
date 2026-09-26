@@ -1,0 +1,85 @@
+---
+title: Getting started
+description: Add Localizer to a Go CLI and get its first translations.
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Localizer works with Go CLIs in public GitHub repositories. For a [Cobra](https://github.com/spf13/cobra) CLI
+(v1.8 or later), one line translates the whole command tree. Other CLIs call `localizer.Init` and use the
+[output helpers](../guides/integration/#2-your-own-messages).
+
+:::note[Private preview]
+During the preview, the hosted translation service is enabled per GitHub account.
+[Request access](https://github.com/DABH/localizer/issues/new?template=access.yml) for the repository you
+want to localize.
+:::
+
+<Steps>
+
+1. **Connect your repository.**
+
+   <Tabs>
+   <TabItem label="GitHub Action">
+   Add `.github/workflows/localizer.yml`:
+
+   ```yaml
+   name: Localizer
+   on:
+     push:
+       branches: [main]
+     workflow_dispatch:
+
+   permissions:
+     contents: write
+     pull-requests: write
+     id-token: write
+
+   jobs:
+     translations:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v7
+         - uses: DABH/localizer/action@v0.3.0
+   ```
+
+   Then turn on **Settings → Actions → General → Allow GitHub Actions to create and approve pull
+   requests**, and push. See the [GitHub Action guide](../guides/github-action/).
+   </TabItem>
+   <TabItem label="GitHub App">
+   Install the Localizer GitHub App on the repository. Nothing else is needed. See the
+   [GitHub App guide](../guides/github-app/).
+   </TabItem>
+   </Tabs>
+
+2. **Merge the onboarding pull request.** The first run opens **Localize this CLI with Localizer**, which
+   adds:
+
+   - `.localizer.yml` with the default settings ([configuration](../reference/configuration/));
+   - `locales/embed.go` and one catalog per language (`locales/ja.json`, `locales/de.json`, …);
+   - the one-line integration, when Localizer finds exactly one place where your root command is
+     executed. Otherwise the pull request tells you where to add it:
+
+     ```go
+     localizer.Localize(root, locales.FS) // right before root.Execute()
+     ```
+
+3. **Try it.**
+
+   ```sh
+   go build -o yourcli .
+   LANG=ja_JP.UTF-8 ./yourcli --help
+   LOCALIZER_LANG=de ./yourcli --help
+   LOCALIZER_LANG=qps ./yourcli --help   # pseudo-localization: shows every string Localizer handles
+   ```
+
+4. **Hook your own messages.** Help and Cobra’s errors are covered by the one line. For messages your
+   code prints, wrap your output helpers with `localizer.T`, `localizer.Sprintf`, `localizer.Error` or
+   `localizer.Writer`. The [integration guide](../guides/integration/) shows how.
+
+5. **Keep tests in English.** Set `LOCALIZER_LANG=en` wherever output is compared with golden files. See
+   [Testing](../guides/testing/).
+
+</Steps>
+
+From now on, every push that changes user-facing strings updates the **Update translations** pull request.

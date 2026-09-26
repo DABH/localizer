@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "language": "zh-Hans",
+  "messages": {
+    "Add a high-priority task.": "添加一个高优先级任务。",
+    "Add a task.": "添加任务。",
+    "Added task %d: %q": "已添加任务 %d：%q",
+    "Completed task %d.": "已完成任务 %d。",
+    "Done": "已完成",
+    "Due date in YYYY-MM-DD format.": "截止日期，格式为 YYYY-MM-DD。",
+    "ID": "ID",
+    "Include completed tasks.": "包含已完成的任务。",
+    "List tasks.": "列出任务。",
+    "Manage your tasks from the terminal.": "在终端中管理你的任务。",
+    "Mark a task as done.": "将任务标记为已完成。",
+    "No tasks found.": "未找到任务。",
+    "Output format: human or json.": "输出格式：human 或 json。",
+    "Print more details.": "输出更多详细信息。",
+    "Priority": "优先级",
+    "Priority of the task: `level` is low, normal or high.": "任务的优先级：`level` 为 low、normal 或 high。",
+    "Title": "标题",
+    "invalid priority %q: must be low, normal or high": "优先级 %q 无效：必须为 low、normal 或 high",
+    "task %d not found": "未找到任务 %d",
+    "task ID must be a number: %w": "任务 ID 必须为数字：%w",
+    "taskctl keeps a small list of tasks.\nUse it to add, list and complete tasks.": "taskctl 维护一个简单的任务列表。\n可用它添加、列出和完成任务。"
+  }
+}

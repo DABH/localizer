@@ -1,0 +1,19 @@
+{
+  "language": "ja",
+  "messages": {
+    "Admin Commands:": "管理コマンド:",
+    "Cleanup `policy` to use.": "使用するクリーンアップ `policy`。",
+    "Create a topic named orders.": "orders という名前のトピックを作成します。",
+    "Create a topic.": "トピックを作成します。",
+    "Created topic %q.\n": "トピック %q を作成しました。\n",
+    "Demo CLI.": "デモ CLI。",
+    "Demo is a tool for testing Localizer.": "Demo は Localizer をテストするためのツールです。",
+    "Enable verbose output.": "詳細な出力を有効にします。",
+    "Manage topics.": "トピックを管理します。",
+    "Number of partitions.": "パーティション数。",
+    "Topic name to use.": "BROKEN %d",
+    "failed to create topic %q: %w": "トピック %[1]q の作成に失敗しました: %[2]w",
+    "topic already exists": "トピックはすでに存在します"
+  },
+  "version": 1
+}

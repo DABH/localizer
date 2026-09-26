@@ -1,0 +1,27 @@
+{
+  "language": "ja",
+  "messages": {
+    "Add a high-priority task.": "優先度の高いタスクを追加します。",
+    "Add a task.": "タスクを追加します。",
+    "Added task %d: %q\n": "タスク %d を追加しました: %q\n",
+    "Completed task %d.\n": "タスク %d を完了しました。\n",
+    "Done": "完了",
+    "Due date in YYYY-MM-DD format.": "期限 (YYYY-MM-DD 形式)。",
+    "ID": "ID",
+    "Include completed tasks.": "完了したタスクも含めます。",
+    "List tasks.": "タスクを一覧表示します。",
+    "Manage your tasks from the terminal.": "ターミナルからタスクを管理します。",
+    "Mark a task as done.": "タスクを完了にします。",
+    "No tasks found.": "タスクが見つかりません。",
+    "Output format: human or json.": "出力形式: human または json。",
+    "Print more details.": "詳細を表示します。",
+    "Priority": "優先度",
+    "Priority of the task: `level` is low, normal or high.": "タスクの優先度: `level` は low、normal、high のいずれかです。",
+    "Title": "タイトル",
+    "invalid priority %q: must be low, normal or high": "優先度 %q は無効です: low、normal、high のいずれかを指定してください",
+    "task %d not found": "タスク %d が見つかりません",
+    "task ID must be a number: %w": "タスク ID は数値で指定してください: %w",
+    "taskctl keeps a small list of tasks.\nUse it to add, list and complete tasks.": "taskctl は小さなタスクリストを管理します。\nタスクの追加、一覧表示、完了に使用します。"
+  },
+  "version": 1
+}

@@ -1,0 +1,49 @@
+name: Localizer
+description: Keep your Go CLI's translations in sync. Localizer translates new user-facing strings with AI and opens one rolling pull request. No API keys.
+author: DABH
+branding:
+  icon: globe
+  color: blue
+
+inputs:
+  api-url:
+    description: Localizer API base URL
+    required: false
+    default: https://ep8u65vghj.execute-api.us-east-2.amazonaws.com/v1
+  audience:
+    description: Audience of the GitHub OIDC token (must match the service)
+    required: false
+    default: localizer
+  github-token:
+    description: Token used to push the translations branch and open the pull request
+    required: false
+    default: ${{ github.token }}
+  branch:
+    description: Branch for the translations pull request
+    required: false
+    default: localizer-translations
+  timeout-minutes:
+    description: How long to wait for translations
+    required: false
+    default: "45"
+
+outputs:
+  status:
+    description: up-to-date, pr-opened or pr-updated
+    value: ${{ steps.sync.outputs.status }}
+  pull-request:
+    description: URL of the translations pull request, if any
+    value: ${{ steps.sync.outputs.pull-request }}
+
+runs:
+  using: composite
+  steps:
+    - id: sync
+      shell: bash
+      env:
+        LOCALIZER_API: ${{ inputs.api-url }}
+        LOCALIZER_AUDIENCE: ${{ inputs.audience }}
+        LOCALIZER_BRANCH: ${{ inputs.branch }}
+        LOCALIZER_TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: '"$GITHUB_ACTION_PATH/sync.sh"'

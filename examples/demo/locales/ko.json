@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "language": "ko",
+  "messages": {
+    "Add a high-priority task.": "높은 우선순위의 작업을 추가합니다.",
+    "Add a task.": "작업을 추가합니다.",
+    "Added task %d: %q": "작업 %d개를 추가했습니다: %q",
+    "Completed task %d.": "작업 %d을(를) 완료했습니다.",
+    "Done": "완료",
+    "Due date in YYYY-MM-DD format.": "YYYY-MM-DD 형식의 기한입니다.",
+    "ID": "ID",
+    "Include completed tasks.": "완료된 작업도 포함합니다.",
+    "List tasks.": "작업 목록을 표시합니다.",
+    "Manage your tasks from the terminal.": "터미널에서 작업을 관리합니다.",
+    "Mark a task as done.": "작업을 완료로 표시합니다.",
+    "No tasks found.": "작업을 찾을 수 없습니다.",
+    "Output format: human or json.": "출력 형식: human 또는 json.",
+    "Print more details.": "자세한 정보를 출력합니다.",
+    "Priority": "우선순위",
+    "Priority of the task: `level` is low, normal or high.": "작업의 우선순위: `level`은 low, normal 또는 high입니다.",
+    "Title": "제목",
+    "invalid priority %q: must be low, normal or high": "잘못된 우선순위 %q: low, normal 또는 high여야 합니다",
+    "task %d not found": "작업 %d을(를) 찾을 수 없습니다",
+    "task ID must be a number: %w": "작업 ID는 숫자여야 합니다: %w",
+    "taskctl keeps a small list of tasks.\nUse it to add, list and complete tasks.": "taskctl은 간단한 작업 목록을 관리합니다.\n작업을 추가하고, 조회하고, 완료 처리하는 데 사용합니다."
+  }
+}

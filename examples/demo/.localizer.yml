@@ -1,0 +1,21 @@
+# Localizer configuration. Every setting is optional.
+languages: [ja, zh-Hans, ko, es, fr, de, pt-BR]
+locales_dir: locales
+
+glossary:
+  # Product names and other terms that must never be translated.
+  keep: []
+
+# style:
+#   de: Use the formal "Sie".
+#   ja: Use polite です/ます form.
+
+extract:
+  # Directories or files to skip ("**" matches any number of path segments).
+  exclude: ["test/**", "**/mock/**"]
+  # Your own output helpers: "import/path.Func" -> indexes of arguments that are user-facing strings.
+  # funcs:
+  #   example.com/yourcli/pkg/output.Printf: [1]
+  # Struct fields and struct tags that hold user-facing text (e.g. table headers):
+  # fields: [example.com/yourcli/pkg/examples.Example.Text]
+  # struct_tags: [human]

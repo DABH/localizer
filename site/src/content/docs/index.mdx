@@ -1,0 +1,164 @@
+---
+title: AI localization for Go CLIs
+description: Ship your Go CLI in your users’ language. AI translations, kept in sync through pull requests and compiled into your binary.
+template: splash
+hero:
+  title: Your CLI, in your users’ language
+  tagline: Localizer translates a Go CLI’s own strings (help, flags, messages, errors) with AI, keeps the translations in sync through pull requests, and compiles them into your binary. One line of code, and no network calls at runtime.
+  image:
+    html: |
+      <div class="hero-term" role="img" aria-label="taskctl --help printed in Japanese">
+        <div class="hero-term-bar"><span></span><span></span><span></span></div>
+        <pre><span class="prompt">$</span> LANG=ja_JP.UTF-8 taskctl --help
+      taskctl は小さなタスクリストを管理します。
+
+      使い方:
+        taskctl [command]
+
+      利用可能なコマンド:
+        add         タスクを追加します。
+        done        タスクを完了にします。
+        list        タスクを一覧表示します。</pre>
+      </div>
+  actions:
+    - text: Get started
+      link: getting-started/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/DABH/localizer
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## One line of code
+
+```go title="main.go" ins={2}
+root := newRootCmd()
+localizer.Localize(root, locales.FS)
+if err := root.Execute(); err != nil {
+	os.Exit(1)
+}
+```
+
+Your users get their language from their OS settings, with nothing to configure:
+
+<Tabs>
+<TabItem label="English">
+```console
+$ taskctl add --help
+Add a task.
+
+Usage:
+  taskctl add <title> [flags]
+
+Flags:
+      --due string       Due date in YYYY-MM-DD format.
+  -h, --help             help for add
+      --priority level   Priority of the task: level is low, normal or high. (default "normal")
+```
+</TabItem>
+<TabItem label="日本語">
+```console
+$ taskctl add --help
+タスクを追加します。
+
+使い方:
+  taskctl add <title> [flags]
+
+フラグ:
+      --due string       期限 (YYYY-MM-DD 形式)。
+  -h, --help             add のヘルプ
+      --priority level   タスクの優先度: level は low、normal、high のいずれかです。 (デフォルト: "normal")
+```
+</TabItem>
+<TabItem label="Deutsch">
+```console
+$ taskctl add --help
+Eine Aufgabe hinzufügen.
+
+Verwendung:
+  taskctl add <title> [flags]
+
+Optionen:
+      --due string       Fälligkeitsdatum im Format YYYY-MM-DD.
+  -h, --help             Hilfe zu add
+      --priority level   Priorität der Aufgabe: level ist low, normal oder high. (Standard: "normal")
+```
+</TabItem>
+<TabItem label="Español">
+```console
+$ taskctl add
+Error: se aceptan 1 argumento(s), se recibieron 0
+Uso:
+  taskctl add <title> [flags]
+
+Opciones:
+      --due string       Fecha de vencimiento en formato AAAA-MM-DD.
+  -h, --help             ayuda de add
+      --priority level   Prioridad de la tarea: level es low, normal o high. (predeterminado: "normal")
+```
+</TabItem>
+</Tabs>
+
+Command names, flags, placeholders and your users’ data stay exactly as they are.
+
+## Why Localizer
+
+<CardGrid>
+	<Card title="Everything your CLI says" icon="comment-alt">
+		Command descriptions, flag help, usage text, Cobra’s built-in commands and the errors it prints are
+		translated automatically. Your own messages go through a few helpers at your output chokepoints.
+	</Card>
+	<Card title="No runtime cost" icon="rocket">
+		Catalogs are compiled in with `go:embed`. Nothing is downloaded and nothing is reported. English
+		output is unchanged, and other languages add a few milliseconds at startup.
+	</Card>
+	<Card title="Always in sync" icon="code-branch">
+		When a push adds or changes strings, Localizer translates just those and updates one pull request.
+		Strings you delete are removed from the catalogs.
+	</Card>
+	<Card title="Safe by design" icon="approve-check">
+		Every translation is checked twice, by the service and again at runtime. Placeholders, flags and code
+		spans must survive intact, and output that isn’t yours is never touched.
+	</Card>
+	<Card title="Human edits win" icon="pencil">
+		Translations are plain JSON in your repository. Correct any entry in a pull request, and Localizer
+		never overwrites it.
+	</Card>
+	<Card title="No keys to leak" icon="padlock">
+		You authenticate through the GitHub App or your workflow’s short-lived OIDC token, so there is no
+		secret to store. Localizer serves open-source repositories only.
+	</Card>
+</CardGrid>
+
+## How it works
+
+<Steps>
+
+1. **Connect your repository.** Add the [GitHub Action](guides/github-action/) to a workflow or install
+   the [GitHub App](guides/github-app/).
+
+2. **Merge the onboarding pull request.** It adds `.localizer.yml`, a `locales/` directory with one
+   catalog per language, and the one-line integration.
+
+3. **Keep shipping.** When your strings change, the translations pull request updates itself. Review it
+   and merge it like any other change.
+
+4. **Your users see their language.** Localizer reads their environment and OS settings, and falls back to
+   English.
+
+</Steps>
+
+:::note[Private preview]
+The hosted translation service is in private preview.
+[Request access](https://github.com/DABH/localizer/issues/new?template=access.yml) for your repository.
+The runtime library is open source (Apache 2.0) and works with any catalogs, including ones you write
+yourself.
+:::
+
+<CardGrid>
+	<LinkCard title="Getting started" description="Set up a CLI in a few minutes." href="getting-started/" />
+	<LinkCard title="How it works" description="From a push to a translated CLI." href="how-it-works/" />
+</CardGrid>
