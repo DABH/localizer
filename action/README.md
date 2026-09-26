@@ -1,0 +1,31 @@
+# Localizer GitHub Action
+
+Keeps your Go CLI's translation catalogs in sync without giving Localizer write access to your repository.
+The workflow authenticates with its short-lived GitHub OIDC token, so there are no secrets to store.
+Localizer fetches the public source at that commit and translates new strings, and the workflow opens one
+rolling pull request with its own `GITHUB_TOKEN`.
+
+```yaml
+name: Localizer
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  translations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: DABH/localizer/action@v0.3.0
+```
+
+Also enable **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**.
+
+Inputs, outputs and notes: see the [GitHub Action guide](https://dabh.github.io/localizer/guides/github-action/).
+The hosted service is in private preview and serves public repositories only.

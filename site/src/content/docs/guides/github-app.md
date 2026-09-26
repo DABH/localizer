@@ -1,0 +1,40 @@
+---
+title: GitHub App
+description: Install the Localizer GitHub App and merge the pull requests it opens.
+---
+
+The GitHub App is the hands-off option. Install it on a repository, and Localizer opens a pull request
+whenever your strings change. You don’t need to add anything to your workflows.
+
+:::note[Private preview]
+The App is available to preview participants.
+[Request access](https://github.com/DABH/localizer/issues/new?template=access.yml).
+:::
+
+## What it does
+
+- On installation, it opens the onboarding pull request, **Localize this CLI with Localizer**.
+- On every push to your default branch that changes Go files, `go.mod` or `.localizer.yml`, it translates
+  the new strings and updates one rolling pull request, **Update translations**, from the
+  `localizer-translations` branch.
+- It never pushes to your default branch. It writes only your catalogs, plus `.localizer.yml`,
+  `locales/embed.go` and the one-line integration in the onboarding pull request. An allowlist in the
+  service enforces this.
+
+## Permissions
+
+| Permission | Why |
+| --- | --- |
+| Contents: read and write | Read your source, and push the `localizer-translations` branch. |
+| Pull requests: read and write | Open and update the translations pull request. |
+| Metadata: read | Required by GitHub for every App. |
+
+The App listens to push events to notice string changes, and to installation events to set up new
+repositories. Each job uses an installation token scoped to the one repository it works on. The token is
+valid for at most an hour and is never stored.
+
+## Private repositories
+
+Localizer serves open-source (public) repositories only. Private repositories are refused at installation
+and again on every job. If you need translations for private code, the runtime library works with
+catalogs you maintain yourself (see [Catalogs](../../reference/catalogs/)).

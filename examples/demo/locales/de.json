@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "language": "de",
+  "messages": {
+    "Add a high-priority task.": "Eine Aufgabe mit hoher Priorität hinzufügen.",
+    "Add a task.": "Eine Aufgabe hinzufügen.",
+    "Added task %d: %q": "Aufgabe %d hinzugefügt: %q",
+    "Completed task %d.": "Aufgabe %d abgeschlossen.",
+    "Done": "Erledigt",
+    "Due date in YYYY-MM-DD format.": "Fälligkeitsdatum im Format YYYY-MM-DD.",
+    "ID": "ID",
+    "Include completed tasks.": "Abgeschlossene Aufgaben einbeziehen.",
+    "List tasks.": "Aufgaben auflisten.",
+    "Manage your tasks from the terminal.": "Aufgaben im Terminal verwalten.",
+    "Mark a task as done.": "Eine Aufgabe als erledigt markieren.",
+    "No tasks found.": "Keine Aufgaben gefunden.",
+    "Output format: human or json.": "Ausgabeformat: human oder json.",
+    "Print more details.": "Mehr Details ausgeben.",
+    "Priority": "Priorität",
+    "Priority of the task: `level` is low, normal or high.": "Priorität der Aufgabe: `level` ist low, normal oder high.",
+    "Title": "Titel",
+    "invalid priority %q: must be low, normal or high": "ungültige Priorität %q: muss low, normal oder high sein",
+    "task %d not found": "Aufgabe %d nicht gefunden",
+    "task ID must be a number: %w": "Aufgaben-ID muss eine Zahl sein: %w",
+    "taskctl keeps a small list of tasks.\nUse it to add, list and complete tasks.": "taskctl verwaltet eine kleine Aufgabenliste.\nDamit können Sie Aufgaben hinzufügen, auflisten und abschließen."
+  }
+}

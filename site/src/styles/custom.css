@@ -1,0 +1,62 @@
+/* Indigo accent, dark theme (Starlight's default). */
+:root {
+	--sl-color-accent-low: #1e1b4b;
+	--sl-color-accent: #6366f1;
+	--sl-color-accent-high: #c7d2fe;
+}
+
+/* Light theme. */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #e0e7ff;
+	--sl-color-accent: #4f46e5;
+	--sl-color-accent-high: #312e81;
+}
+
+/* Terminal sample in the home page hero. */
+.hero-term {
+	width: min(100%, 30rem);
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background: #0f172a;
+	box-shadow: 0 1.25rem 2.75rem -1rem rgb(15 23 42 / 0.5);
+	text-align: start;
+}
+.hero-term-bar {
+	display: flex;
+	gap: 0.4rem;
+	padding: 0.7rem 0.9rem;
+	background: #1e293b;
+}
+.hero-term-bar span {
+	width: 0.7rem;
+	height: 0.7rem;
+	border-radius: 50%;
+	background: #475569;
+}
+.hero-term pre {
+	margin: 0;
+	padding: 1rem 1.25rem 1.25rem;
+	overflow-x: auto;
+	border: 0;
+	background: transparent;
+	color: #e2e8f0;
+	font-family: var(--sl-font-system-mono);
+	font-size: 0.85rem;
+	line-height: 1.65;
+}
+.hero-term .prompt {
+	color: #a5b4fc;
+}
+
+/* On narrow screens the terminal gets the full width. */
+@media (max-width: 49.99rem) {
+	.hero > .hero-html {
+		width: 100%;
+	}
+	.hero-term {
+		margin-inline: auto;
+	}
+	.hero-term pre {
+		font-size: 0.78rem;
+	}
+}
