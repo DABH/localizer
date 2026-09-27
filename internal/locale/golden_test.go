@@ -87,6 +87,8 @@ func TestGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v (run with -update to generate)", err)
 	}
+	// Windows checkouts may carry CRLF line endings; the content is what matters.
+	have = bytes.ReplaceAll(have, []byte("\r\n"), []byte("\n"))
 	if !bytes.Equal(have, data) {
 		t.Fatalf("%s is out of date: run go test ./internal/locale -run Golden -update", goldenPath())
 	}
