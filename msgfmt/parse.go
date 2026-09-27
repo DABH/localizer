@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+// SPDX-License-Identifier: NCSA
+
 // Package msgfmt understands the two kinds of placeholders that appear in CLI strings: Go fmt verbs
 // ("Created %s \"%s\".") and text/template actions ("{{.CommandPath}}").
 //

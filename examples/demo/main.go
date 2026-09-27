@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+// SPDX-License-Identifier: NCSA
+
 // Command taskctl is a tiny Cobra CLI that demonstrates Localizer.
 //
 //	go run ./examples/demo --help                     # English

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+// SPDX-License-Identifier: NCSA
+
 // Package catalog reads and writes Localizer translation catalogs: one JSON file per language, named
 // "<BCP 47 tag>.json", mapping each English source string to its translation.
 //

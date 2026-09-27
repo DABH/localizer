@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+// SPDX-License-Identifier: NCSA
+
 // Package localizer renders a CLI's own strings (help, flag descriptions, messages, errors) in the user's
 // language, using translation catalogs that are committed to the repository and embedded in the binary.
 //

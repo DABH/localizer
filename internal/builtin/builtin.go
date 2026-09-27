@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+// SPDX-License-Identifier: NCSA
+
 // Package builtin embeds Localizer's own translations of the strings Cobra and pflag print (help
 // headings, the help/completion commands, argument and flag errors). An application's catalog overrides
 // these entry by entry.
