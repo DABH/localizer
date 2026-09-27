@@ -1,0 +1,53 @@
+name: pypi
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths: ['python/**', '.github/workflows/pypi.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # hatch-vcs reads the version from the tag
+      - uses: astral-sh/setup-uv@v7
+      - name: Build
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            # A tag build must never come out as a dev version.
+            export SETUPTOOLS_SCM_PRETEND_VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          uv build python/ --out-dir dist
+      - name: Smoke-test the wheel
+        run: |
+          uv venv --python 3.10 smoke
+          uv pip install --python smoke/bin/python dist/*.whl
+          smoke/bin/python -c 'import localizer, localizer.builtin as b; print(localizer.__version__, b.languages())'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    # Trusted publishing: PyPI accepts this repository's OIDC token for the "pypi" environment; no API
+    # token is stored anywhere.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/localizer-py
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
