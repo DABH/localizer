@@ -1,18 +1,24 @@
 ---
 title: Getting started
-description: Add Localizer to a Go CLI and get its first translations.
+description: Add Localizer to a Go or Python CLI and get its first translations.
 ---
 
 import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Localizer works with Go CLIs in public GitHub repositories. For a [Cobra](https://github.com/spf13/cobra) CLI
-(v1.8 or later), one line translates the whole command tree. Other CLIs call `localizer.Init` and use the
+Localizer works with Go and Python CLIs in public GitHub repositories. For a
+[Cobra](https://github.com/spf13/cobra) CLI (v1.8 or later), or a [Typer](https://typer.tiangolo.com/),
+[Click](https://click.palletsprojects.com/) or argparse CLI (Python 3.10 or later), one line translates the
+whole command tree. Other CLIs call `Init`/`init` and use the
 [output helpers](../guides/integration/#2-your-own-messages).
 
 :::note[Private preview]
 During the preview, the hosted translation service is enabled per GitHub account.
 [Request access](https://github.com/DABH/localizer/issues/new?template=access.yml) for the repository you
 want to localize.
+:::
+
+:::tip[Using a coding agent?]
+Point it at [AGENTS.md](https://locale.dev/AGENTS.md); see [Using a coding agent](../agents/).
 :::
 
 <Steps>
@@ -53,32 +59,52 @@ want to localize.
    </Tabs>
 
 2. **Merge the onboarding pull request.** The first run opens **Localize this CLI with Localizer**, which
-   adds:
+   adds `.localizer.yml` with the default settings ([configuration](../reference/configuration/)), the
+   locales package with one catalog per language, and the one-line integration when Localizer finds exactly
+   one place where your CLI runs. Otherwise the pull request tells you where to add it.
 
-   - `.localizer.yml` with the default settings ([configuration](../reference/configuration/));
-   - `locales/embed.go` and one catalog per language (`locales/ja.json`, `locales/de.json`, …);
-   - the one-line integration, when Localizer finds exactly one place where your root command is
-     executed. Otherwise the pull request tells you where to add it:
-
-     ```go
-     localizer.Localize(root, locales.FS) // right before root.Execute()
-     ```
+   <Tabs syncKey="lang">
+   <TabItem label="Go">
+   - `locales/embed.go` and `locales/ja.json`, `locales/de.json`, …;
+   - `localizer.Localize(root, locales.FS)` right before `root.Execute()`, and the module in `go.mod`.
+   </TabItem>
+   <TabItem label="Python">
+   - `yourcli/locales/__init__.py` and `yourcli/locales/ja.json`, `yourcli/locales/de.json`, … inside your
+     package (with `src/` layouts too);
+   - `localizer.localize(app, "yourcli.locales")` right before the app runs, and `localizer-py` in
+     `pyproject.toml`’s dependencies. Regenerate your lock file if you keep one, and with setuptools make
+     sure the JSON files are packaged (`[tool.setuptools.package-data]`).
+   </TabItem>
+   </Tabs>
 
 3. **Try it.**
 
+   <Tabs syncKey="lang">
+   <TabItem label="Go">
    ```sh
    go build -o yourcli .
    LANG=ja_JP.UTF-8 ./yourcli --help
    LOCALIZER_LANG=de ./yourcli --help
    LOCALIZER_LANG=qps ./yourcli --help   # pseudo-localization: shows every string Localizer handles
    ```
+   </TabItem>
+   <TabItem label="Python">
+   ```sh
+   pip install -e .                      # or: uv sync
+   LANG=ja_JP.UTF-8 yourcli --help
+   LOCALIZER_LANG=de yourcli --help
+   LOCALIZER_LANG=qps yourcli --help     # pseudo-localization: shows every string Localizer handles
+   ```
+   </TabItem>
+   </Tabs>
 
-4. **Hook your own messages.** Help and Cobra’s errors are covered by the one line. For messages your
-   code prints, wrap your output helpers with `localizer.T`, `localizer.Sprintf`, `localizer.Error` or
-   `localizer.Writer`. The [integration guide](../guides/integration/) shows how.
+4. **Hook your own messages.** Help and your framework’s errors are covered by the one line. For messages
+   your code prints, wrap your output helpers with `localizer.T`, `localizer.Sprintf`, `localizer.Error` or
+   `localizer.Writer` (Go), or `localizer.t`, `localizer.tf` and `localizer.error` (Python). The
+   [integration guide](../guides/integration/) shows how.
 
-5. **Keep tests in English.** Set `LOCALIZER_LANG=en` wherever output is compared with golden files. See
-   [Testing](../guides/testing/).
+5. **Keep tests in English.** Set `LOCALIZER_LANG=en` wherever output is compared with golden files (for
+   pytest, a `pytest_configure` hook in the root `conftest.py`). See [Testing](../guides/testing/).
 
 </Steps>
 

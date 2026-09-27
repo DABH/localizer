@@ -1,10 +1,11 @@
 # Localizer
 
-Localizer renders a Go CLI's own strings (help text, flag descriptions, messages, errors) in the user's
-language. Translations are produced by AI, kept in sync automatically through pull requests, and compiled
-into your binary. Localization adds no network calls and no noticeable startup cost.
+Localizer renders a CLI's own strings (help text, flag descriptions, messages, errors, prompts) in the
+user's language. Translations are produced by AI, kept in sync automatically through pull requests, and
+shipped inside your binary or package. Localization adds no network calls and no noticeable startup cost.
+Go with Cobra; Python with Typer, Click or argparse.
 
-**Documentation: https://locale.dev/**
+**Documentation: https://locale.dev/** · **Coding agents: [AGENTS.md](AGENTS.md)**
 
 ```go
 import (
@@ -21,6 +22,13 @@ func main() {
 }
 ```
 
+```python
+import localizer  # pip install localizer-py
+
+localizer.localize(app, "yourcli.locales")  # ← the whole integration for Typer, Click and argparse CLIs
+app()
+```
+
 ```console
 $ LANG=ja_JP.UTF-8 taskctl add --help
 タスクを追加します。
@@ -34,10 +42,11 @@ $ LANG=ja_JP.UTF-8 taskctl add --help
       --priority level   タスクの優先度: level は low、normal、high のいずれかです。 (デフォルト: "normal")
 ```
 
-`locales/embed.go` embeds one JSON catalog per language (`ja.json`, `de.json`, …), keyed by the exact
-English source string. The hosted Localizer service keeps the catalogs up to date. On every push that
-changes user-facing strings, it translates the new ones and opens or updates one pull request. Connect it
-with:
+A locales package holds one JSON catalog per language (`ja.json`, `de.json`, …), keyed by the exact
+English source string: `locales/embed.go` embeds them into a Go binary, `yourcli/locales/__init__.py`
+ships them inside a Python package. The hosted Localizer service keeps the catalogs up to date. On every
+push that changes user-facing strings, it translates the new ones and opens or updates one pull request.
+Connect it with:
 
 - the **[Localizer GitHub Action](https://locale.dev/guides/github-action/)**. Your workflow
   authenticates with its short-lived GitHub OIDC token, so there's no API key, and Localizer never gets
@@ -46,33 +55,35 @@ with:
   the pull requests it opens.
 
 The first pull request sets everything up, including the line above. The hosted service is in private
-preview: see [Getting started](https://locale.dev/getting-started/).
+preview: see [Getting started](https://locale.dev/getting-started/). A coding agent can do the integration
+from [AGENTS.md](AGENTS.md) (also at https://locale.dev/AGENTS.md).
 
 Catalogs are plain JSON that you can also write or edit by hand. Localizer never overwrites an existing
 translation.
 
 ## What gets translated
 
-With the one line above: every command's `Short`, `Long`, `Example` and deprecation text, all flag
-descriptions, help and usage headings, Cobra's built-in `help` and `completion` commands, shell-completion
-descriptions, and the errors Cobra prints (unknown commands and flags, argument counts, required
-flags, …).
+With the one line above: every command's description, help and deprecation text, all flag and option
+descriptions, help and usage headings, the framework's built-in commands and messages (Cobra's `help` and
+`completion`, Click's and Typer's `Show this message and exit.`, `[default: …]`, argparse's
+`positional arguments`, …), shell-completion descriptions, prompts, and the errors the framework prints
+(unknown commands and flags, missing arguments, invalid values, …).
 
 Your own runtime messages go through a few helpers at your output chokepoints:
 
-| Helper | Use |
-| --- | --- |
-| `localizer.T(s)` | Translate a string. For a format string, call it before formatting. |
-| `localizer.Sprintf(format, args...)` | `fmt.Sprintf` with a translated format. |
-| `localizer.Error(err)` | Translate an error chain for display. Server text stays as it is. |
-| `localizer.Writer(w)` | An `io.Writer` that translates CLI strings written through it. |
+| Go | Python | Use |
+| --- | --- | --- |
+| `localizer.T(s)` | `localizer.t(s)` | Translate a string. For a format string, call it before formatting. |
+| `localizer.Sprintf(format, args...)` | `localizer.tf(fmt, *args, **kwargs)` | Format with a translated format string. |
+| `localizer.Error(err)` | `localizer.error(exc)` | Translate an error for display. Server text stays as it is. |
+| `localizer.Writer(w)` | `localizer.translate(text, mode)` | Translate already formatted text at a chokepoint. |
 
 Dynamic data (server responses, IDs, JSON and YAML output) is never translated. Only strings found in your
 catalog change, and anything else passes through untouched.
 
 ## Language selection
 
-`LOCALIZER_LANG` (or an app-specific variable added with `localizer.WithEnvVar`) → `LC_ALL` →
+`LOCALIZER_LANG` (or an app-specific variable: `localizer.WithEnvVar` / `env_var=`) → `LC_ALL` →
 `LC_MESSAGES` → `LANG` (with GNU `LANGUAGE`) → the OS setting (macOS preferred languages, Windows display
 language) → English. `C` and `POSIX` locales keep English, so scripts stay stable. `LOCALIZER_LANG=off`
 disables localization. `LOCALIZER_LANG=qps` pseudo-localizes every known string, which is handy for
@@ -81,22 +92,29 @@ spotting strings that don't go through Localizer yet.
 ## Try it
 
 ```sh
+# Go (Cobra)
 go run ./examples/demo --help
 LANG=ja_JP.UTF-8 go run ./examples/demo add --help
-LANG=ja_JP.UTF-8 go run ./examples/demo done 9
 LOCALIZER_LANG=qps go run ./examples/demo --help
+
+# Python (Typer); needs uv
+cd python/examples/taskctl
+LANG=ja_JP.UTF-8 uv run taskctl --help
+LANG=de_DE.UTF-8 uv run taskctl done 9
 ```
 
 ## Repository layout
 
 | Path | What |
 | --- | --- |
-| `/` | The runtime library: the only package your CLI imports. Dependencies: cobra, pflag, x/text, x/sys. |
-| `catalog/`, `engine/`, `msgfmt/` | Catalog format, lookup engine, and format-string and template parsing, exported for tools. |
+| `/` | The Go runtime library: the only package a Go CLI imports. Dependencies: cobra, pflag, x/text, x/sys. |
+| `catalog/`, `engine/`, `msgfmt/` | Catalog format, lookup engine, and placeholder grammar (Go and Python), exported for tools. |
 | `internal/` | Locale detection, and built-in translations of Cobra's own strings. |
+| `python/` | The Python runtime, published to PyPI as `localizer-py` (import name `localizer`), with its tests and a Typer demo. |
+| `testdata/conformance/` | The shared specification and test vectors both runtimes must satisfy. |
 | `action/` | The GitHub Action. |
 | `examples/demo/` | A small Cobra CLI that uses Localizer. |
-| `site/` | The documentation site, published with GitHub Pages. |
+| `site/` | The documentation site, published at https://locale.dev. |
 
 ## Security
 

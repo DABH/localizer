@@ -1,6 +1,6 @@
 # Localizer GitHub Action
 
-Keeps your Go CLI's translation catalogs in sync without giving Localizer write access to your repository.
+Keeps your Go or Python CLI's translation catalogs in sync without giving Localizer write access to your repository.
 The workflow authenticates with its short-lived GitHub OIDC token, so there are no secrets to store.
 Localizer fetches the public source at that commit and translates new strings, and the workflow opens one
 rolling pull request with its own `GITHUB_TOKEN`.

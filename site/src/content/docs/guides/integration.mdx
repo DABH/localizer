@@ -1,0 +1,216 @@
+---
+title: Integration guide
+description: The one line per framework, output helpers for your own messages, and what gets extracted.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## 1. The one line
+
+<Tabs syncKey="lang">
+<TabItem label="Go (Cobra)">
+```go
+import (
+	"github.com/DABH/localizer"
+	"example.com/yourcli/locales"
+)
+
+func main() {
+	root := newRootCmd()
+	localizer.Localize(root, locales.FS) // call last, right before Execute
+	if err := root.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+```
+
+`locales/embed.go` comes with the onboarding pull request:
+
+```go
+package locales
+
+import "embed"
+
+//go:embed *.json
+var FS embed.FS
+```
+
+Call `Localize` on the production path only, after every command, flag and help function is set up.
+Unit tests, doc generators and linters that build the command tree directly then stay in English. If your
+CLI rebuilds its tree at runtime (in an interactive shell, for example), call `Localize` on each new root.
+The language decision is reused.
+
+The one line translates:
+
+- command descriptions: `Short`, `Long`, `Example` and `Deprecated`;
+- flag descriptions and command group titles;
+- the help, usage and version templates;
+- Cobra’s `help` and `completion` commands, and shell completion descriptions;
+- the errors Cobra prints: unknown commands and flags, argument counts, required flags and flag groups.
+</TabItem>
+<TabItem label="Python (Typer, Click, argparse)">
+```python
+import localizer
+
+# Typer
+localizer.localize(app, "yourcli.locales")
+app()
+
+# Click
+localizer.localize(cli, "yourcli.locales")
+cli()
+
+# argparse
+localizer.localize(parser, "yourcli.locales")
+args = parser.parse_args()
+```
+
+`"yourcli.locales"` is the package that holds the catalogs, `yourcli/locales/__init__.py` plus
+`yourcli/locales/ja.json`, …; a directory path or an `importlib.resources` Traversable works too. The
+onboarding pull request creates the package inside your CLI’s package (with `src/` layouts as well) so that
+the JSON files ship in your wheel: hatchling, poetry, flit, pdm and uv include them automatically,
+setuptools needs `[tool.setuptools.package-data] yourcli = ["locales/*.json"]`.
+
+Call `localize` on the production path only, after every command and option is registered, right before
+the app runs. If your app is built by a factory, call it where the finished object is handed out, right
+before it runs. Commands registered later — plugins, lazy groups, eager option callbacks — are still
+covered, because translation happens when help and errors render, on copies of your command objects (the
+originals are never modified, so code that compares `rich_help_panel` or names keeps working).
+
+The one line translates:
+
+- help text and short help of every command, option and argument, epilogs, `rich_help_panel` titles and
+  deprecation notices (Rich markup and Markdown help are preserved);
+- the frameworks’ own strings: `Usage:`, `Options`, `Commands`, `Show this message and exit.`, `[default: …]`,
+  `[required]`, argparse’s `positional arguments`, … — built-in catalogs ship in `localizer-py`;
+- the errors they print: `No such command`, `Missing argument`, `Invalid value for …`, `Got unexpected
+  extra argument`, argparse’s `error: the following arguments are required`, … — including the copy of
+  Click bundled with Typer 0.26 and later;
+- the messages of the exceptions your commands raise (`ClickException`, `BadParameter`, your own
+  subclasses), when they are displayed;
+- `prompt`/`confirm` texts.
+
+Options: `env_var="YOURCLI_LANG"` adds an application-specific override variable; `language="de"` forces
+a language; `without_error_hook=True` and `without_prompt_hook=True` switch those hooks off.
+</TabItem>
+</Tabs>
+
+Help is translated when it renders, so a normal invocation pays almost nothing for the size of the command
+tree.
+
+## 2. Your own messages
+
+Add a few helpers at your output chokepoints:
+
+<Tabs syncKey="lang">
+<TabItem label="Go">
+| Helper | Use |
+| --- | --- |
+| `localizer.T(s)` | Translate a string. Translate a format string before formatting: `fmt.Sprintf(localizer.T(format), args...)`. |
+| `localizer.Sprintf(format, args...)` | Shorthand for the above. |
+| `localizer.Error(err)` | Translate an error for display. CLI-authored parts of a wrapped chain are translated, and server text stays as it is. |
+| `localizer.Writer(w)` | An `io.Writer` that translates known strings written through it. It works per `Write`, so prompts flush immediately. |
+| `localizer.Errorf(format, args...)` | `fmt.Errorf` with a translated format. `%w` still wraps. If other code compares error strings, use `Error` at display time instead. |
+| `localizer.Lang()` | The active language, or `""` for English. |
+
+Most CLIs print through a handful of helpers, so hook those instead of every call site. For example,
+[a fork of the Confluent CLI](https://github.com/DABH/cli/tree/localizer) needed about fifteen lines:
+
+- its six printing functions;
+- three spots in its table renderer (column headers from struct tags, and "None found.");
+- its prompt renderer;
+- its "Suggestions:" block;
+- its "REQUIRED:" flag label.
+
+For a CLI that doesn’t use Cobra, call `localizer.Init(locales.FS)` once at startup and use the helpers.
+</TabItem>
+<TabItem label="Python">
+| Helper | Use |
+| --- | --- |
+| `localizer.t(s)` | Translate a string. A format string is looked up exactly, so call `t` before `.format()`; finished text (an f-string) is matched against the catalog’s templates, so `t(f"Deleted {n} files")` works too. |
+| `localizer.tf(fmt, *args, **kwargs)` | `str.format` with a translated format string; falls back to the English format if the translation can’t be formatted. |
+| `localizer.error(exc)` | An exception’s message (`format_message()` or `str()`) translated for display; text from servers and libraries stays as it is. |
+| `localizer.translate(text, mode)` | For chokepoints that receive already formatted text: `localizer.Mode.OUTPUT`, `HELP` or `ERROR` decide how composite text may be split. |
+| `localizer.lang()` | The active language, or `""` for English. |
+
+Most CLIs print through a console wrapper. For example, a Typer CLI with a `cli_console.step(message)` /
+`cli_console.warning(message)` class needs `localizer.t` in those methods, and its result printer passes
+message results through `t` for human-readable output only, never for `--format json`.
+
+For a CLI that uses none of the three frameworks, call `localizer.init("yourcli.locales")` once at startup
+and use the helpers.
+</TabItem>
+</Tabs>
+
+Never pass serialized output (JSON, YAML, CSV) through these helpers.
+
+## 3. What is extracted
+
+The service reads your source statically. It never builds, imports or runs it.
+
+<Tabs syncKey="lang">
+<TabItem label="Go">
+It collects:
+
+- Cobra command and group fields, and pflag and `flag` definitions;
+- `fmt`, `errors` and `log` messages, and Cobra’s `cmd.Print*`;
+- `localizer.T`, `localizer.Sprintf` and `localizer.Errorf` calls;
+- message-like struct fields (`ErrorMsg`, `Message`, `SuggestionsMsg`, `Prompt`, …) and templates;
+- whatever you configure with [`extract.funcs`, `extract.fields` and `extract.struct_tags`](../../reference/configuration/).
+
+Constants are folded across packages, helper functions are followed to the strings they return, and
+`fmt.Sprintf` is expanded over every value its arguments can take.
+
+Mark exceptions with a `//localizer:ignore` comment. Add a note for the translator with
+`//localizer:context <note>`.
+</TabItem>
+<TabItem label="Python">
+It collects:
+
+- `help=`, `short_help=`, `epilog=`, `description=`, `rich_help_panel=`, `deprecated=` and `prompt=`
+  arguments of Typer, Click and argparse definitions, argument group titles, and the docstrings of command
+  functions (`inspect.cleandoc` applied, code blocks skipped);
+- `print`, `click.echo`/`secho`, `typer.echo`, `rich.print`, `console.print`-style calls, `sys.stdout.write`;
+- prompts: `typer.prompt`/`confirm`, `click.prompt`/`confirm`, `rich.prompt.*.ask`, `input`;
+- the messages of Click and Typer exceptions, `SystemExit`/`sys.exit`, and of your own exception classes
+  (constructor arguments, `super().__init__(...)`, `self.message = …`, `format_message`/`__str__`);
+- `localizer.t`, `localizer.tf` and `localizer.translate` calls;
+- message-like keyword arguments (`message=`, `msg=`, `hint=`, `suggestion=`, …);
+- whatever you configure with [`extract.funcs` and `extract.fields`](../../reference/configuration/).
+
+f-strings become templates: `f"Plugin {name} is not installed: {', '.join(p)}"` is extracted as
+`Plugin {name} is not installed: {0}` (names and attribute chains keep their text, other expressions are
+numbered, conversions and format specs are dropped), and the runtime matches the rendered text against the
+template. `%`-formats and `.format()` literals keep their format string as the key. Constants are folded
+across modules, ternaries and dict lookups yield every candidate, and helper functions are followed to the
+strings they return. `logging` calls stay in English by default. Test directories, `conftest.py`,
+`test_*.py`, virtual environments and build outputs are never scanned.
+
+Mark exceptions with a `# localizer:ignore` comment on the line or the line before. Add a note for the
+translator with `# localizer:context <note>`.
+</TabItem>
+</Tabs>
+
+To see which strings don’t go through Localizer yet, run your CLI with pseudo-localization or debug output
+(see [Testing](../testing/)).
+
+## 4. Known limitations
+
+- Sentences assembled at runtime from English fragments (`"Deleted " + noun + "."`) are only partly
+  translated. Full sentences with placeholders translate well.
+- Output that bypasses your hooked chokepoints, such as third-party full-screen terminal UIs or child
+  processes, stays in English.
+- Plural rules aren’t modeled. CLIs usually write "item(s)", which translates fine.
+
+<Tabs syncKey="lang">
+<TabItem label="Go">
+- `text/tabwriter` pads by rune count, so columns with wide (CJK) characters may not line up. Table
+  libraries based on `go-runewidth` handle this.
+</TabItem>
+<TabItem label="Python">
+- Rich measures display width correctly, so tables and panels line up in every language. Translations are
+  usually longer than English; check narrow terminals.
+- Rich markup (`[bold]…[/]`) and Markdown in help are preserved, and a translation that drops or reorders a
+  markup tag is rejected.
+</TabItem>
+</Tabs>

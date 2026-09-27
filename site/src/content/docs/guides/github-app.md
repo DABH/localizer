@@ -14,12 +14,13 @@ The App is available to preview participants.
 ## What it does
 
 - On installation, it opens the onboarding pull request, **Localize this CLI with Localizer**.
-- On every push to your default branch that changes Go files, `go.mod` or `.localizer.yml`, it translates
-  the new strings and updates one rolling pull request, **Update translations**, from the
-  `localizer-translations` branch.
-- It never pushes to your default branch. It writes only your catalogs, plus `.localizer.yml`,
-  `locales/embed.go` and the one-line integration in the onboarding pull request. An allowlist in the
-  service enforces this.
+- On every push to your default branch that changes source files (`.go`, `.py`), project files (`go.mod`,
+  `pyproject.toml`, `setup.py`, `setup.cfg`) or `.localizer.yml`, it translates the new strings and updates
+  one rolling pull request, **Update translations**, from the `localizer-translations` branch.
+- It never pushes to your default branch. It writes only your catalogs, plus, in the onboarding pull
+  request, `.localizer.yml`, the locales package file (`locales/embed.go` or `locales/__init__.py`), the
+  one-line integration and, for Python, the `localizer-py` dependency in `pyproject.toml`. An allowlist in
+  the service enforces this.
 
 ## Permissions
 

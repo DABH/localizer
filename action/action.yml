@@ -1,5 +1,5 @@
 name: Localizer
-description: Keep your Go CLI's translations in sync. Localizer translates new user-facing strings with AI and opens one rolling pull request. No API keys.
+description: Keep your CLI's translations in sync (Go and Python). Localizer translates new user-facing strings with AI and opens one rolling pull request. No API keys.
 author: DABH
 branding:
   icon: globe
