@@ -4,7 +4,7 @@ Localizer renders a Go CLI's own strings (help text, flag descriptions, messages
 language. Translations are produced by AI, kept in sync automatically through pull requests, and compiled
 into your binary. Localization adds no network calls and no noticeable startup cost.
 
-**Documentation: https://dabh.github.io/localizer/**
+**Documentation: https://locale.dev/**
 
 ```go
 import (
@@ -39,14 +39,14 @@ English source string. The hosted Localizer service keeps the catalogs up to dat
 changes user-facing strings, it translates the new ones and opens or updates one pull request. Connect it
 with:
 
-- the **[Localizer GitHub Action](https://dabh.github.io/localizer/guides/github-action/)**. Your workflow
+- the **[Localizer GitHub Action](https://locale.dev/guides/github-action/)**. Your workflow
   authenticates with its short-lived GitHub OIDC token, so there's no API key, and Localizer never gets
   write access to your repository; or
-- the **[Localizer GitHub App](https://dabh.github.io/localizer/guides/github-app/)**. Install it and merge
+- the **[Localizer GitHub App](https://locale.dev/guides/github-app/)**. Install it and merge
   the pull requests it opens.
 
 The first pull request sets everything up, including the line above. The hosted service is in private
-preview: see [Getting started](https://dabh.github.io/localizer/getting-started/).
+preview: see [Getting started](https://locale.dev/getting-started/).
 
 Catalogs are plain JSON that you can also write or edit by hand. Localizer never overwrites an existing
 translation.
@@ -100,7 +100,7 @@ LOCALIZER_LANG=qps go run ./examples/demo --help
 
 ## Security
 
-See the [security model](https://dabh.github.io/localizer/security/). Report vulnerabilities privately as
+See the [security model](https://locale.dev/security/). Report vulnerabilities privately as
 described in [SECURITY.md](SECURITY.md).
 
 ## Contributing

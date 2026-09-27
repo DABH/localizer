@@ -1,6 +1,6 @@
 # Localizer Contributor Assignment Agreement
 
-Version 1, September 26, 2026
+Version 1, September 27, 2026
 
 **In short:** you transfer the copyright in your contributions to Snizyx Software LLC, the company that
 develops Localizer. You keep a license to use your own contributions however you like. Snizyx can license
@@ -80,5 +80,4 @@ You sign it by posting the comment that the CLA bot asks for on a pull request, 
 GitHub account. Snizyx records your GitHub account, the time, and a link to your comment.
 
 If a court finds any part of this agreement unenforceable, the rest stays in effect. This agreement is
-governed by the laws of the state in which Snizyx Software LLC is organized, excluding its conflict-of-laws
-rules.
+governed by the laws of the State of Wyoming, excluding its conflict-of-laws rules.
