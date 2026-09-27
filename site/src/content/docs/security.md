@@ -7,15 +7,18 @@ Localizer is built so that adopting it adds as little risk as possible for CLI m
 
 ## The shipped CLI
 
-- **No network, no telemetry, no credentials.** Translations are compiled into the binary with `go:embed`.
-  Nothing is downloaded at runtime, and nothing about the user is reported.
+- **No network, no telemetry, no credentials.** Translations are compiled into the binary with `go:embed`,
+  or shipped as data files inside the Python package. Nothing is downloaded at runtime, and nothing about
+  the user is reported.
 - **Catalogs are untrusted data.** Before a translation is used, the runtime checks that it keeps exactly
-  the source’s placeholders (Go verbs, including flags, width and precision; template actions; backquoted
-  spans) and adds no control characters or terminal escape sequences. Anything else falls back to English.
-  A malicious catalog entry can’t inject escape sequences, change how arguments are rendered, or allocate
-  huge padding.
+  the source’s placeholders (Go verbs, including flags, width and precision, and template actions; Python
+  `str.format` fields, printf verbs and Rich markup tags; backquoted spans) and adds no control characters
+  or terminal escape sequences. Anything else falls back to English. A malicious catalog entry can’t inject
+  escape sequences, change how arguments are rendered, or allocate huge padding.
 - **Only known strings change.** Output that doesn’t match a catalog entry, such as server responses, IDs
   and JSON, passes through untouched. Reverse matching refuses captures that look like prose.
+- **Python hooks fail open.** The runtime works on copies of your command objects and never modifies them;
+  any internal error leaves the CLI in English rather than breaking it.
 
 ## Your repository
 
@@ -26,24 +29,26 @@ Localizer is built so that adopting it adds as little risk as possible for CLI m
   `contents:write`, `pull_requests:write` and `metadata:read`. Tokens expire within an hour and are never
   stored. With the Action, Localizer has no write access at all.
 - **Pull requests only.** Localizer never pushes to your default branch. It updates its own
-  `localizer-translations` branch and a single rolling pull request that you review. It writes only
-  `locales/*.json`, plus `locales/embed.go`, `.localizer.yml` and the one-line integration in the
-  onboarding pull request. An allowlist in the service enforces this.
+  `localizer-translations` branch and a single rolling pull request that you review. It writes only the
+  catalogs, plus, in the onboarding pull request, `.localizer.yml`, the locales package file
+  (`locales/embed.go` or `locales/__init__.py`), the one-line integration and, for Python, the dependency in
+  `pyproject.toml`. An allowlist in the service enforces this.
 - **Human edits win.** Existing catalog entries are never retranslated, so your corrections stay.
 
 ## The service
 
 - **Your code is never executed.** Source is fetched as a tarball and unpacked in memory. Only `*.go`,
-  `go.mod`, the configuration and catalogs are kept; links, absolute paths and `..` are rejected; and size
-  and file-count limits apply. The code is parsed with `go/parser`. Nothing is built or run, and no source
-  is kept after a job.
+  `go.mod`, `*.py`, `pyproject.toml`, `setup.py`, `setup.cfg`, the configuration and catalogs are kept;
+  links, absolute paths and `..` are rejected; and size and file-count limits apply. Go is parsed with
+  `go/parser`, Python with the standard library’s `ast` in a separate function with no network access.
+  Nothing is built, imported or run, and no source is kept after a job.
 - **Abuse resistance.** The service translates only strings it extracted itself from a public
   repository’s default branch, so a forged trigger can’t make it translate arbitrary text. Per-account
   monthly quotas, a translation memory (nothing is paid for twice) and a cap on concurrent jobs bound cost.
 - **Prompt injection.** Strings are sent to the model as JSON data with a fixed instruction set. Every
-  answer is schema-checked and validated (placeholders, backquotes, URLs, flags, `<args>`, glossary terms,
-  quoting, paragraph structure, length) before it can reach a pull request, and the runtime checks it
-  again.
+  answer is schema-checked and validated (placeholders, backquotes, markup, URLs, flags, `<args>`, glossary
+  terms, quoting, paragraph structure, length) before it can reach a pull request, and the runtime checks
+  it again.
 - **Secrets.** The GitHub App private key and webhook secret live in AWS Secrets Manager, encrypted with a
   customer-managed KMS key. Webhooks are authenticated with HMAC-SHA256 in constant time and de-duplicated
   by delivery ID. Action requests are authenticated by verifying GitHub’s OIDC token signature and claims.

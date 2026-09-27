@@ -1,10 +1,10 @@
 ---
-title: AI localization for Go CLIs
-description: Ship your Go CLI in your users’ language. AI translations, kept in sync through pull requests and compiled into your binary.
+title: AI localization for CLIs
+description: Ship your CLI in your users’ language. AI translations, kept in sync through pull requests and shipped inside your binary or package. Go and Python.
 template: splash
 hero:
   title: Your CLI, in your users’ language
-  tagline: Localizer translates a Go CLI’s own strings (help, flags, messages, errors) with AI, keeps the translations in sync through pull requests, and compiles them into your binary. One line of code, and no network calls at runtime.
+  tagline: Localizer translates a CLI’s own strings (help, flags, messages, errors) with AI, keeps the translations in sync through pull requests, and ships them inside your binary or package. One line of code, no network calls at runtime. Go with Cobra; Python with Typer, Click or argparse.
   image:
     html: |
       <div class="hero-term" role="img" aria-label="taskctl --help printed in Japanese">
@@ -34,6 +34,8 @@ import { Card, CardGrid, LinkCard, Steps, Tabs, TabItem } from '@astrojs/starlig
 
 ## One line of code
 
+<Tabs syncKey="lang">
+<TabItem label="Go">
 ```go title="main.go" ins={2}
 root := newRootCmd()
 localizer.Localize(root, locales.FS)
@@ -41,6 +43,14 @@ if err := root.Execute(); err != nil {
 	os.Exit(1)
 }
 ```
+</TabItem>
+<TabItem label="Python">
+```python title="yourcli/__main__.py" ins={1}
+localizer.localize(app, "yourcli.locales")
+app()
+```
+</TabItem>
+</Tabs>
 
 Your users get their language from their OS settings, with nothing to configure:
 
@@ -108,12 +118,13 @@ Command names, flags, placeholders and your users’ data stay exactly as they a
 
 <CardGrid>
 	<Card title="Everything your CLI says" icon="comment-alt">
-		Command descriptions, flag help, usage text, Cobra’s built-in commands and the errors it prints are
-		translated automatically. Your own messages go through a few helpers at your output chokepoints.
+		Command descriptions, flag help, usage text, your framework’s built-in commands and the errors it
+		prints — Cobra, Typer, Click or argparse — are translated automatically. Your own messages go through a
+		few helpers at your output chokepoints.
 	</Card>
 	<Card title="No runtime cost" icon="rocket">
-		Catalogs are compiled in with `go:embed`. Nothing is downloaded and nothing is reported. English
-		output is unchanged, and other languages add a few milliseconds at startup.
+		Catalogs are compiled in with `go:embed` or shipped inside your Python package. Nothing is downloaded
+		and nothing is reported. English output is unchanged, and other languages add a few milliseconds.
 	</Card>
 	<Card title="Always in sync" icon="code-branch">
 		When a push adds or changes strings, Localizer translates just those and updates one pull request.
@@ -140,8 +151,8 @@ Command names, flags, placeholders and your users’ data stay exactly as they a
 1. **Connect your repository.** Add the [GitHub Action](guides/github-action/) to a workflow or install
    the [GitHub App](guides/github-app/).
 
-2. **Merge the onboarding pull request.** It adds `.localizer.yml`, a `locales/` directory with one
-   catalog per language, and the one-line integration.
+2. **Merge the onboarding pull request.** It adds `.localizer.yml`, a locales package with one catalog per
+   language, and the one-line integration.
 
 3. **Keep shipping.** When your strings change, the translations pull request updates itself. Review it
    and merge it like any other change.
@@ -160,5 +171,6 @@ including ones you write yourself.
 
 <CardGrid>
 	<LinkCard title="Getting started" description="Set up a CLI in a few minutes." href="getting-started/" />
+	<LinkCard title="Using a coding agent" description="Let an agent do the integration from AGENTS.md." href="agents/" />
 	<LinkCard title="How it works" description="From a push to a translated CLI." href="how-it-works/" />
 </CardGrid>

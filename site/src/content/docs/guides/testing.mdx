@@ -3,12 +3,15 @@ title: Testing and QA
 description: Keep golden tests stable, find strings that aren’t localized yet, and try any language.
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 ## Keep golden tests in English
 
 Localization follows the user’s environment, so a developer with a Japanese desktop would otherwise get
-Japanese output in your tests. Set `LOCALIZER_LANG=en` in the environment of the process under test. In
-most test harnesses this is a one-line change:
+Japanese output in your tests. Set `LOCALIZER_LANG=en` in the environment of the process under test:
 
+<Tabs syncKey="lang">
+<TabItem label="Go">
 ```go
 cmd := exec.Command(binaryPath, args...)
 cmd.Env = append(os.Environ(), "LOCALIZER_LANG=en")
@@ -16,6 +19,23 @@ cmd.Env = append(os.Environ(), "LOCALIZER_LANG=en")
 
 Tests that build the command tree without going through your `main` aren’t affected, because
 `Localize` is never called there.
+</TabItem>
+<TabItem label="Python">
+```python
+# conftest.py at the repository root
+import os
+
+
+def pytest_configure(config):
+    os.environ.setdefault("LOCALIZER_LANG", "en")
+```
+
+With Typer’s `CliRunner` or Click’s, `localize` runs whenever your entry point does, so the pin matters
+even for in-process tests. To test a language on purpose, set the variable for that test
+(`monkeypatch.setenv("LOCALIZER_LANG", "ja")`) and call `localizer.uninstall()` afterwards so the hooks
+don’t leak into other tests.
+</TabItem>
+</Tabs>
 
 ## Try a language
 
@@ -40,9 +60,11 @@ $ LOCALIZER_LANG=qps taskctl --help
 
 Two more switches help with coverage:
 
-- `LOCALIZER_DEBUG=1` reports untranslated help strings on stderr.
+- `LOCALIZER_DEBUG=1` reports untranslated strings (and, in Python, hook errors that were swallowed) on
+  stderr.
 - `LOCALIZER_DUMP=<file>` writes every help string in the command tree as JSON, including whether each one
-  was translated:
+  was translated. Go writes it when `Localize` runs; Python writes it the first time help renders, so run
+  `--help`:
 
   ```json
   {
@@ -58,6 +80,15 @@ Two more switches help with coverage:
 
 ## Terminal width
 
-Translations can be longer than English, and CJK characters take two columns. Localizer keeps flag
-columns aligned the same way Cobra does. For your own tables, prefer a library that measures display
-width (for example one based on `go-runewidth`) over `text/tabwriter`, which counts runes.
+Translations can be longer than English, and CJK characters take two columns.
+
+<Tabs syncKey="lang">
+<TabItem label="Go">
+Localizer keeps flag columns aligned the same way Cobra does. For your own tables, prefer a library that
+measures display width (for example one based on `go-runewidth`) over `text/tabwriter`, which counts runes.
+</TabItem>
+<TabItem label="Python">
+Rich (used by Typer) measures display width, so panels and tables line up. Plain Click help wraps
+translated text with the same width rules as English.
+</TabItem>
+</Tabs>
