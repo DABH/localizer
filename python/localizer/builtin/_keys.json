@@ -1,0 +1,661 @@
+{
+ "_": "English strings of Click 8.1-8.5, Typer 0.17-0.27 and argparse 3.10-3.14 that Localizer translates for every CLI; the builtin catalogs are translated from this list. Tooling only.",
+ "keys": {
+  " (default: %(default)s)": [
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "%(heading)s:": [
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "%(prog)s, version %(version)s": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "%(prog)s: error: %(message)s\n": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "%(prog)s: warning: %(message)s\n": [
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "(DEPRECATED)": [
+   "typer-bundled"
+  ],
+  "(DEPRECATED: {self.deprecated})": [
+   "typer-bundled"
+  ],
+  "(Deprecated) {text}": [
+   "click-old"
+  ],
+  "(Did you mean one of: {possibilities}?)": [
+   "click-new"
+  ],
+  "(Possible options: {possibilities})": [
+   "click-mid",
+   "click-old"
+  ],
+  "(Possible options: {possibility_str})": [
+   "typer-bundled"
+  ],
+  "(deprecated) ": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "(dynamic)": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Aborted!": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Aborted.": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Argument {name!r} takes {nargs} values.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Arguments": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Choose from:\n\t{choices}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Commands": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Confirm the action without prompting.": [
+   "click-new"
+  ],
+  "Could not open file {filename!r}: {message}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Couldn't detect Bash version, shell completion is not supported.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "DeprecationWarning: The command {name!r} is deprecated.": [
+   "click-old"
+  ],
+  "DeprecationWarning: The command {name!r} is deprecated.{extra_message}": [
+   "click-mid",
+   "click-new"
+  ],
+  "DeprecationWarning: The {param_type} {name!r} is deprecated.{extra_message}": [
+   "click-mid",
+   "click-new"
+  ],
+  "Did you mean {possibility}?": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Do you want to continue?": [
+   "click-new"
+  ],
+  "Error": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Error: The two entered values do not match.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Error: The value you entered was invalid.": [
+   "click-mid",
+   "click-old"
+  ],
+  "Error: invalid input": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Error: {0}": [
+   "typer-bundled"
+  ],
+  "Error: {e.message}": [
+   "click-mid",
+   "click-old"
+  ],
+  "Error: {message}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Got unexpected extra argument ({args})": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-bundled"
+  ],
+  "Got unexpected extra argument(s) ({0})": [
+   "typer-bundled"
+  ],
+  "Got unexpected extra arguments ({args})": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-bundled"
+  ],
+  "Install completion for the current shell.": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Install completion for the specified shell.": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Invalid value for {param_hint}: {message}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Invalid value: {message}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Missing argument": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Missing argument{param_hint}.{msg}": [
+   "typer-bundled"
+  ],
+  "Missing command.": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-new"
+  ],
+  "Missing option": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Missing option{param_hint}.{msg}": [
+   "typer-bundled"
+  ],
+  "Missing parameter": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Missing parameter: {param_name}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Missing parameter{param_hint}.{msg}": [
+   "typer-bundled"
+  ],
+  "Missing {param_type}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "No such command {name!r}.": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-new"
+  ],
+  "No such option {name!r}.": [
+   "click-new"
+  ],
+  "No such option: {name}": [
+   "click-mid",
+   "click-old"
+  ],
+  "No such option: {option_name}": [
+   "typer-bundled"
+  ],
+  "Option {name!r} does not take a value.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Option {name!r} requires an argument.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Option {name!r} requires {nargs} arguments.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Option {opt!r} does not take a value.": [
+   "typer-bundled"
+  ],
+  "Options": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Positional arguments": [
+   "click-new"
+  ],
+  "Press any key to continue...": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Repeat for confirmation": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Shell completion is not supported for Bash versions older than 4.4.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Show completion for the current shell, to copy it or customize the installation.": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Show completion for the specified shell, to copy it or customize the installation.": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Show the version and exit.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Show this message and exit.": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-new"
+  ],
+  "Takes {nargs} values but 1 was given.": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-bundled"
+  ],
+  "Takes {nargs} values but {len} were given.": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-bundled"
+  ],
+  "Takes {self.nargs} values but {0} given.": [
+   "typer-bundled"
+  ],
+  "Try '{command} {option}' for help.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "Try [blue]'{command_path} {help_option}'[/] for help.": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "Usage:": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "[default: {}]": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "[env var: {}]": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "[required]": [
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "ambiguous option: %(option)s could match %(matches)s": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "argument \"-\" with mode %r": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "argument %(argument_name)s: %(message)s": [
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "argument '%(argument_name)s' is deprecated": [
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "can't open '%(filename)s': %(error)s": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "command '%(parser_name)s' is deprecated": [
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "default: {default}": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "deprecated": [
+   "click-new"
+  ],
+  "directory": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "env var: {var}": [
+   "click-mid",
+   "click-new",
+   "click-old",
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "expected %s argument": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "expected %s arguments": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "expected at least one argument": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "expected at most one argument": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "expected one argument": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "file": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "ignored explicit argument %r": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "invalid %(type)s value: %(value)r": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "invalid choice: %(value)r (choose from %(choices)s)": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "invalid choice: %(value)r, maybe you meant %(closest)r? (choose from %(choices)s)": [
+   "argparse-3.14"
+  ],
+  "not allowed with argument %s": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "one of the arguments %s is required": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "option '%(option)s' is deprecated": [
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "options": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "path": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "positional arguments": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "required": [
+   "click-old",
+   "typer-mid",
+   "typer-new",
+   "typer-old"
+  ],
+  "show program's version number and exit": [
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "show this help message and exit": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "subcommands": [
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "the following arguments are required: %s": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "unexpected option string: %s": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "unknown error": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "unknown parser %(parser_name)r (choices: %(choices)s)": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "unrecognized arguments: %s": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "usage: ": [
+   "argparse-3.10",
+   "argparse-3.12",
+   "argparse-3.13",
+   "argparse-3.14"
+  ],
+  "{editor}: Editing failed": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{editor}: Editing failed: {e}": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{len_type} values are required, but {len_value} was given.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{len_type} values are required, but {len_value} were given.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{name} {filename!r} does not exist.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{name} {filename!r} is a directory.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{name} {filename!r} is a file.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{name} {filename!r} is not executable.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{name} {filename!r} is not readable.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{name} {filename!r} is not writable.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{text} {deprecated_message}": [
+   "click-mid"
+  ],
+  "{value!r} does not match the format {format}.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{value!r} does not match the formats {formats}.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{value!r} is not a valid UUID.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{value!r} is not a valid boolean.": [
+   "click-old"
+  ],
+  "{value!r} is not a valid boolean. Recognized values: {states}": [
+   "click-mid",
+   "click-new"
+  ],
+  "{value!r} is not a valid {number_type}.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{value!r} is not a valid {self.name}.": [
+   "typer-bundled"
+  ],
+  "{value!r} is not one of {choices}.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{value!r} is not {choice}.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ],
+  "{value} is not in the range {range}.": [
+   "click-mid",
+   "click-new",
+   "click-old"
+  ]
+ }
+}

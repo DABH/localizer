@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "language": "es",
+  "format": "python",
+  "messages": {
+    "Add a high-priority task:": "Agregar una tarea de prioridad alta:",
+    "Add a task.": "Agrega una tarea.",
+    "Added task {n}: {title!r}": "Se agregó la tarea {n}: {title!r}",
+    "Due date in YYYY-MM-DD format.": "Fecha de vencimiento en formato AAAA-MM-DD.",
+    "ID of the task.": "ID de la tarea.",
+    "Include completed tasks.": "Incluye las tareas completadas.",
+    "List tasks.": "Enumera las tareas.",
+    "Manage your tasks from the terminal.": "Gestione sus tareas desde la terminal.",
+    "Mark a task as done.": "Marca una tarea como completada.",
+    "Output format: human or json.": "Formato de salida: human o json.",
+    "Print more details.": "Muestra más detalles.",
+    "Priority of the task: `level` is low, normal or high.": "Prioridad de la tarea: `level` es low, normal o high.",
+    "Title of the task.": "Título de la tarea.",
+    "task {id} not found": "no se encontró la tarea {id}",
+    "taskctl keeps a small list of tasks.\n\nUse it to add, list and complete tasks.": "taskctl mantiene una pequeña lista de tareas.\n\nÚselo para agregar, enumerar y completar tareas."
+  }
+}

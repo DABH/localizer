@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.27", "hatch-vcs>=0.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "localizer-py"
+dynamic = ["version"]
+description = "Render your Typer, Click or argparse CLI in the user's language with Localizer catalogs."
+readme = "README.md"
+license = "NCSA"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = []
+import-names = ["localizer"]  # PEP 794: pip install localizer-py, import localizer
+authors = [{ name = "Snizyx Software LLC" }]
+keywords = ["localization", "i18n", "cli", "typer", "click", "argparse"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Localization",
+  "Topic :: Software Development :: Internationalization",
+]
+
+[project.urls]
+Homepage = "https://locale.dev/"
+Documentation = "https://locale.dev/reference/runtime/"
+Source = "https://github.com/DABH/localizer"
+Changelog = "https://github.com/DABH/localizer/releases"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { root = "..", local_scheme = "no-local-version" }
+
+[tool.hatch.build.hooks.vcs]
+version-file = "localizer/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["localizer"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/localizer", "/tests", "/README.md", "/LICENSE", "/pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
