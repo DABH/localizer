@@ -1,0 +1,217 @@
+{
+  "syntax": "python",
+  "description": "Reverse matching. `compiles` (default true) says whether `format` yields a pattern; `match` (default true) whether `input` matches it, with `captures` keyed by field identity and `classes` (v text, q repr, d integer, f float, c character); `translation` is then rendered with the captures into `spliced` (`splices: false` when it must fail).",
+  "cases": [
+    {
+      "name": "repr and text",
+      "format": "Created {name!r} with {n} items.",
+      "input": "Created 'orders' with 3 items.",
+      "captures": {
+        "name": "'orders'",
+        "n": "3"
+      },
+      "classes": {
+        "name": "q",
+        "n": "v"
+      },
+      "translation": "{n} 件を含む {name!r} を作成しました。",
+      "spliced": "3 件を含む 'orders' を作成しました。"
+    },
+    {
+      "name": "repr with double quotes",
+      "format": "Removed {p!r}.",
+      "input": "Removed \"a'b\".",
+      "captures": {
+        "p": "\"a'b\""
+      },
+      "classes": {
+        "p": "q"
+      }
+    },
+    {
+      "name": "named printf",
+      "format": "%(name)s is %(age)d years old",
+      "input": "Ann is 30 years old",
+      "captures": {
+        "name": "Ann",
+        "age": "30"
+      },
+      "classes": {
+        "name": "v",
+        "age": "d"
+      },
+      "translation": "%(age)d 歳の %(name)s",
+      "spliced": "30 歳の Ann"
+    },
+    {
+      "name": "auto-numbered fields reordered",
+      "format": "{} and {}",
+      "input": "a and b",
+      "captures": {
+        "0": "a",
+        "1": "b"
+      },
+      "classes": {
+        "0": "v",
+        "1": "v"
+      },
+      "translation": "{1} y {0}",
+      "spliced": "b y a"
+    },
+    {
+      "name": "generic format refused",
+      "format": "{}: {}",
+      "compiles": false
+    },
+    {
+      "name": "plain text refused",
+      "format": "plain text",
+      "compiles": false
+    },
+    {
+      "name": "mixed numbering refused",
+      "format": "{} and {0}",
+      "compiles": false
+    },
+    {
+      "name": "float spec",
+      "format": "Elapsed {t:.3f}s for {name}",
+      "input": "Elapsed 0.123s for build",
+      "captures": {
+        "t": "0.123",
+        "name": "build"
+      },
+      "classes": {
+        "t": "f",
+        "name": "v"
+      }
+    },
+    {
+      "name": "repeated identity must agree",
+      "format": "{x} or {x}",
+      "input": "a or b",
+      "match": false
+    },
+    {
+      "name": "repeated identity agrees",
+      "format": "{x} or {x}",
+      "input": "a or a",
+      "captures": {
+        "x": "a"
+      },
+      "classes": {
+        "x": "v"
+      }
+    },
+    {
+      "name": "captures never cross lines",
+      "format": "Deleted {x}.",
+      "input": "Deleted a\nb.",
+      "match": false
+    },
+    {
+      "name": "a multiline format may capture across its own lines",
+      "format": "Line one {x}\nline two.",
+      "input": "Line one a\nline two.",
+      "captures": {
+        "x": "a"
+      },
+      "classes": {
+        "x": "v"
+      }
+    },
+    {
+      "name": "integer class rejects text",
+      "format": "Found {n:d} files",
+      "input": "Found many files",
+      "match": false
+    },
+    {
+      "name": "integer class",
+      "format": "Found {n:d} files",
+      "input": "Found 12 files",
+      "captures": {
+        "n": "12"
+      },
+      "classes": {
+        "n": "d"
+      }
+    },
+    {
+      "name": "padded field keeps its padding",
+      "format": "Name: {name:>10}!",
+      "input": "Name:        bob!",
+      "captures": {
+        "name": "       bob"
+      },
+      "classes": {
+        "name": "v"
+      },
+      "translation": "Nom : {name:>10} !",
+      "spliced": "Nom :        bob !"
+    },
+    {
+      "name": "percent is literal in a brace template",
+      "format": "Progress: {pct}% done",
+      "input": "Progress: 50% done",
+      "captures": {
+        "pct": "50"
+      },
+      "classes": {
+        "pct": "v"
+      }
+    },
+    {
+      "name": "printf percent literal (positional verbs keep their order)",
+      "format": "%d%% of %s",
+      "input": "50% of disk",
+      "captures": {
+        "0": "50",
+        "1": "disk"
+      },
+      "classes": {
+        "0": "d",
+        "1": "v"
+      },
+      "translation": "%d%% は %s",
+      "spliced": "50% は disk"
+    },
+    {
+      "name": "translation with an unknown field fails to splice",
+      "format": "Hello {name}",
+      "input": "Hello Ann",
+      "captures": {
+        "name": "Ann"
+      },
+      "classes": {
+        "name": "v"
+      },
+      "translation": "Hola {nombre}",
+      "splices": false
+    },
+    {
+      "name": "empty capture",
+      "format": "Value: {v}.",
+      "input": "Value: .",
+      "captures": {
+        "v": ""
+      },
+      "classes": {
+        "v": "v"
+      }
+    },
+    {
+      "name": "field at the start",
+      "format": "{name} is not installed.",
+      "input": "dbt is not installed.",
+      "captures": {
+        "name": "dbt"
+      },
+      "classes": {
+        "name": "v"
+      },
+      "translation": "{name} はインストールされていません。",
+      "spliced": "dbt はインストールされていません。"
+    }
+  ]
+}

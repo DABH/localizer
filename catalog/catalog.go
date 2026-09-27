@@ -23,8 +23,11 @@ const Version = 1
 
 // File is one language's catalog.
 type File struct {
-	Version  int               `json:"version"`
-	Language string            `json:"language"`
+	Version  int    `json:"version"`
+	Language string `json:"language"`
+	// Format names the placeholder syntax of the keys: "" for Go strings, "python" for str.format fields
+	// and printf-style verbs.
+	Format   string            `json:"format,omitempty"`
 	Messages map[string]string `json:"messages"`
 }
 

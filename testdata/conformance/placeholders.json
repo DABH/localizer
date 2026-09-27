@@ -1,0 +1,376 @@
+{
+  "syntax": "python",
+  "description": "Placeholder extraction and translation validity. `placeholders` lists what ExtractSyntax must find in `source` (omitted lists are empty). When `translation` is present, `valid` says whether it keeps every placeholder and adds no control characters.",
+  "cases": [
+    {
+      "name": "repr field kept",
+      "source": "No such option {name!r}.",
+      "translation": "オプション {name!r} はありません。",
+      "placeholders": {
+        "fields": [
+          "{name!r}"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "repr conversion dropped",
+      "source": "No such option {name!r}.",
+      "translation": "オプション {name} はありません。",
+      "placeholders": {
+        "fields": [
+          "{name!r}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "auto-numbered fields may be reordered by number",
+      "source": "{} and {}",
+      "translation": "{1} y {0}",
+      "placeholders": {
+        "fields": [
+          "{0}",
+          "{1}"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "mixing auto and manual numbering is invalid",
+      "source": "{} and {}",
+      "translation": "{} y {0}",
+      "placeholders": {
+        "fields": [
+          "{0}",
+          "{1}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "nested spec is part of the signature",
+      "source": "{x:{w}}",
+      "placeholders": {
+        "fields": [
+          "{x:{w}}"
+        ]
+      }
+    },
+    {
+      "name": "escaped braces are literal",
+      "source": "Use {{braces}} around {x}",
+      "translation": "Utilisez {{accolades}} autour de {x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "unescaping a brace creates a field",
+      "source": "Use {{braces}} around {x}",
+      "translation": "Use {braces} around {x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "percent followed by a space is prose",
+      "source": "100% done",
+      "translation": "100% fertig",
+      "placeholders": {},
+      "valid": true
+    },
+    {
+      "name": "named printf verbs",
+      "source": "%(name)s is %(age)d",
+      "translation": "%(age)d 歳の %(name)s",
+      "placeholders": {
+        "fields": [
+          "%(age)d",
+          "%(name)s"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "positional printf verbs",
+      "source": "%d items (%s)",
+      "translation": "%d 件 (%s)",
+      "placeholders": {
+        "fields": [
+          "%0:d",
+          "%1:s"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "width is part of the signature",
+      "source": "%-10s|",
+      "translation": "%-9999999999s|",
+      "placeholders": {
+        "fields": [
+          "%0:-10s"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "named and positional verbs cannot mix",
+      "source": "%(name)s and %s",
+      "placeholders": {}
+    },
+    {
+      "name": "trailing percent is not a verb",
+      "source": "50%",
+      "placeholders": {}
+    },
+    {
+      "name": "star width is unsupported",
+      "source": "%*d",
+      "placeholders": {}
+    },
+    {
+      "name": "date format is not a template",
+      "source": "%Y-%m-%d",
+      "placeholders": {}
+    },
+    {
+      "name": "brace fields win over percent",
+      "source": "Progress: {pct}%",
+      "placeholders": {
+        "fields": [
+          "{pct}"
+        ]
+      }
+    },
+    {
+      "name": "float spec kept",
+      "source": "Elapsed {t:.3f}s for {name}",
+      "translation": "{name} の経過時間 {t:.3f} 秒",
+      "placeholders": {
+        "fields": [
+          "{name}",
+          "{t:.3f}"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "spec changed",
+      "source": "Elapsed {t:.3f}s for {name}",
+      "translation": "{name} の経過時間 {t:.1f} 秒",
+      "placeholders": {
+        "fields": [
+          "{name}",
+          "{t:.3f}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "attribute chains",
+      "source": "Role {self.role} does not own {self.name}.",
+      "placeholders": {
+        "fields": [
+          "{self.name}",
+          "{self.role}"
+        ]
+      }
+    },
+    {
+      "name": "index containing a colon",
+      "source": "{d[a:b]} x",
+      "placeholders": {
+        "fields": [
+          "{d[a:b]}"
+        ]
+      }
+    },
+    {
+      "name": "unknown conversion is not a template",
+      "source": "{x!q} y",
+      "placeholders": {}
+    },
+    {
+      "name": "lone closing brace is prose",
+      "source": "lone } brace",
+      "translation": "einsame } Klammer",
+      "placeholders": {},
+      "valid": true
+    },
+    {
+      "name": "unterminated brace is prose",
+      "source": "unterminated { brace",
+      "placeholders": {}
+    },
+    {
+      "name": "markup tags kept",
+      "source": "[bold]Warning:[/bold] {x}",
+      "translation": "[bold]警告:[/bold] {x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ],
+        "tags": [
+          "[/bold]",
+          "[bold]"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "markup tag dropped",
+      "source": "[bold]Warning:[/bold] {x}",
+      "translation": "警告: {x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ],
+        "tags": [
+          "[/bold]",
+          "[bold]"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "closing tag added",
+      "source": "Done {x}",
+      "translation": "[bold]Done[/bold] {x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "brackets without a closing tag are not markup",
+      "source": "[optional] value",
+      "translation": "[optionnel] valeur",
+      "placeholders": {},
+      "valid": true
+    },
+    {
+      "name": "bracket escape kept",
+      "source": "Use \\[user\\] here",
+      "translation": "Utilisez \\[user\\] ici",
+      "placeholders": {
+        "tags": [
+          "\\["
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "bracket escape dropped",
+      "source": "Use \\[user\\] here",
+      "translation": "Utilisez [user] ici",
+      "placeholders": {
+        "tags": [
+          "\\["
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "markdown link is not a tag",
+      "source": "See [docs](https://x.example) for {x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ]
+      }
+    },
+    {
+      "name": "close-last tag",
+      "source": "[red]x[/] {y}",
+      "placeholders": {
+        "fields": [
+          "{y}"
+        ],
+        "tags": [
+          "[/]",
+          "[red]"
+        ]
+      }
+    },
+    {
+      "name": "link tag with a URL",
+      "source": "[link=https://x.example]docs[/link] {x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ],
+        "tags": [
+          "[/link]",
+          "[link=https://x.example]"
+        ]
+      }
+    },
+    {
+      "name": "backquoted span kept",
+      "source": "Run `snow sql` with {x}",
+      "translation": "{x} で `snow sql` を実行",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ],
+        "backquoted": [
+          "`snow sql`"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "backquoted span dropped",
+      "source": "Run `snow sql` with {x}",
+      "translation": "{x} で snow sql を実行",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ],
+        "backquoted": [
+          "`snow sql`"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "control character injected",
+      "source": "Hello {x}",
+      "translation": "Hello \u001b[31m{x}",
+      "placeholders": {
+        "fields": [
+          "{x}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "field renamed",
+      "source": "Hello {name}",
+      "translation": "Hola {nombre}",
+      "placeholders": {
+        "fields": [
+          "{name}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "plain text",
+      "source": "Add a task.",
+      "translation": "タスクを追加します。",
+      "placeholders": {},
+      "valid": true
+    }
+  ]
+}
