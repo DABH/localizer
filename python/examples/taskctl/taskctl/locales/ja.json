@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "language": "ja",
+  "format": "python",
+  "messages": {
+    "Add a high-priority task:": "優先度の高いタスクを追加します:",
+    "Add a task.": "タスクを追加します。",
+    "Added task {n}: {title!r}": "タスク {n} を追加しました: {title!r}",
+    "Due date in YYYY-MM-DD format.": "YYYY-MM-DD 形式の期限日。",
+    "ID of the task.": "タスクの ID。",
+    "Include completed tasks.": "完了したタスクも含めます。",
+    "List tasks.": "タスクを一覧表示します。",
+    "Manage your tasks from the terminal.": "ターミナルからタスクを管理します。",
+    "Mark a task as done.": "タスクを完了としてマークします。",
+    "Output format: human or json.": "出力形式: human または json。",
+    "Print more details.": "詳細情報を表示します。",
+    "Priority of the task: `level` is low, normal or high.": "タスクの優先度: `level` は low、normal、high のいずれかです。",
+    "Title of the task.": "タスクのタイトル。",
+    "task {id} not found": "タスク {id} が見つかりません",
+    "taskctl keeps a small list of tasks.\n\nUse it to add, list and complete tasks.": "taskctl は小さなタスクリストを管理します。\n\nタスクの追加、一覧表示、完了に使用します。"
+  }
+}

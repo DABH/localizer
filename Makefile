@@ -1,8 +1,8 @@
 GO ?= go
 
-.PHONY: all test race vet fmt fmt-check fuzz bench site site-dev
+.PHONY: all test race vet fmt fmt-check fuzz bench python site site-dev
 
-all: fmt-check vet test
+all: fmt-check vet test python
 
 test:
 	$(GO) test ./...
@@ -28,6 +28,10 @@ fuzz:
 
 bench:
 	$(GO) test -run '^$$' -bench . -benchmem . ./engine/
+
+# The Python runtime (python/, published as localizer-py). Needs uv.
+python:
+	cd python && uv run --with-editable . --with pytest --with typer --with click pytest -q
 
 # The documentation site (site/, Astro Starlight). `make site-dev` serves it at http://localhost:4321/localizer/.
 site:
