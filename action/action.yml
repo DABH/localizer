@@ -9,7 +9,7 @@ inputs:
   api-url:
     description: Localizer API base URL
     required: false
-    default: https://ep8u65vghj.execute-api.us-east-2.amazonaws.com/v1
+    default: https://api.locale.dev/v1
   audience:
     description: Audience of the GitHub OIDC token (must match the service)
     required: false
