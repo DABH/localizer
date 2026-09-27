@@ -76,6 +76,7 @@ class Engine:
         self._valid: dict[str, bool] = {}
         self._memo: list[dict[str, str]] = [{}, {}, {}]
         self._memo_size = 0
+        self._translations: set[str] | None = None
         self._lock = threading.Lock()
 
     @classmethod
@@ -121,6 +122,22 @@ class Engine:
             return "", False
         return t, True
 
+    def is_translation(self, s: str) -> bool:
+        """Whether ``s`` is one of the catalogs' translations: text that was already translated once and
+        reaches the engine again (a framework re-rendering a translated help string) is not a miss."""
+        if self._translations is None:
+            with self._lock:
+                if self._translations is None:
+                    values: set[str] = set()
+                    for layer in self._layers:
+                        for v in layer.values():
+                            _, core, _ = fmt.split_space(v)
+                            if core:
+                                values.add(core)
+                    self._translations = values
+        _, core, _ = fmt.split_space(s)
+        return core in self._translations
+
     def _is_valid(self, src: str, tr: str) -> bool:
         """A translation must keep the source's placeholders and add no control characters; invalid
         entries behave as if missing, so the CLI falls back to English."""
@@ -145,7 +162,7 @@ class Engine:
         out = self._translate(s, mode, 0)
         if out == s and self.on_miss is not None and mode == Mode.HELP:
             _, core, _ = fmt.split_space(s)
-            if fmt.has_letter(core):
+            if fmt.has_letter(core) and not self.is_translation(core):
                 self.on_miss(s, mode)
         if cacheable:
             with self._lock:
