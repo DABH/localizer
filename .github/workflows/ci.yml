@@ -30,6 +30,15 @@ jobs:
           go-version: stable
       - run: make fmt-check vet
 
+  cla-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node --test .github/cla/cla.test.js
+
   cobra-compat:
     # The runtime requires cobra >= v1.8 but must keep working with the newest release.
     runs-on: ubuntu-latest

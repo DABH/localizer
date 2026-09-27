@@ -1,0 +1,37 @@
+# Contributor Assignment Agreement check (see CLA.md and .github/cla/cla.js).
+name: cla
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write       # record signatures on the cla-signatures branch
+  pull-requests: write  # comment on pull requests
+  issues: write
+  statuses: write       # the CLA commit status
+
+concurrency:
+  group: cla-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  cla:
+    # Pull requests, and comments on them that could be a signature or a recheck.
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      (github.event.issue.pull_request &&
+       (contains(github.event.comment.body, 'hereby sign') || contains(github.event.comment.body, 'recheck')))
+    runs-on: ubuntu-latest
+    steps:
+      # The default branch's copy of the script. Code from the pull request is never checked out or run.
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/cla
+          persist-credentials: false
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const cla = require('./.github/cla/cla.js');
+            await cla.run({ github, context, core });
