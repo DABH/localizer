@@ -103,6 +103,13 @@ LOCALIZER_LANG=qps go run ./examples/demo --help
 See the [security model](https://dabh.github.io/localizer/security/). Report vulnerabilities privately as
 described in [SECURITY.md](SECURITY.md).
 
+## Contributing
+
+Contributions are welcome. Before your first pull request can be merged, you'll be asked to sign the
+[Contributor Assignment Agreement](CLA.md); a bot comments on the pull request with instructions. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-[Apache License 2.0](LICENSE)
+Copyright (c) 2026 Snizyx Software LLC. Licensed under the
+[University of Illinois/NCSA Open Source License](LICENSE).

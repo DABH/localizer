@@ -1,0 +1,16 @@
+---
+// Starlight's footer, plus the copyright notice.
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default><slot /></Default>
+<p class="copyright">© 2026 Snizyx Software LLC</p>
+
+<style>
+	.copyright {
+		margin-top: 2rem;
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-xs);
+		text-align: center;
+	}
+</style>

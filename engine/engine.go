@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+// SPDX-License-Identifier: NCSA
+
 // Package engine looks up translations for strings a CLI prints: exact catalog hits, reverse-matched
 // format strings, and composite text split into paragraphs, lines and "label: message" parts.
 //

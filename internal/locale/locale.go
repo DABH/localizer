@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+// SPDX-License-Identifier: NCSA
+
 // Package locale works out which language the user wants: explicit overrides, the POSIX locale
 // environment, then the operating system's preferred languages.
 package locale
