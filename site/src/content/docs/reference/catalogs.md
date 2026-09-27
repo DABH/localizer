@@ -8,13 +8,28 @@ each English source string, exactly as it appears in your code, to its translati
 
 ```json
 {
+  "version": 1,
   "language": "ja",
   "messages": {
     "Add a task.": "タスクを追加します。",
     "Due date in YYYY-MM-DD format.": "期限 (YYYY-MM-DD 形式)。",
     "task %d not found": "タスク %d が見つかりません"
-  },
-  "version": 1
+  }
+}
+```
+
+Python catalogs carry `"format": "python"` and use Python placeholders:
+
+```json
+{
+  "version": 1,
+  "language": "ja",
+  "format": "python",
+  "messages": {
+    "Add a task.": "タスクを追加します。",
+    "Added task {n}: {title!r}": "タスク {n} を追加しました: {title!r}",
+    "task {id} not found": "タスク {id} が見つかりません"
+  }
 }
 ```
 
@@ -26,10 +41,13 @@ until its translation is merged.
 
 The runtime uses a translation only if it keeps everything a program depends on:
 
-- the same format verbs, including argument indexes, flags, width and precision (`%s`, `%[2]d`, `%-8s`);
-- the same template actions (`{{.CommandPath}}`);
+- **Go:** the same format verbs, including argument indexes, flags, width and precision (`%s`, `%[2]d`,
+  `%-8s`), and the same template actions (`{{.CommandPath}}`);
+- **Python:** the same `str.format` fields (`{name}`, `{0}`, `{title!r}`, `{x:>8}`) and printf-style verbs
+  (`%s`, `%(name)s`, `%d`); named and numbered fields may be reordered, `{}` and `%s` may not; and the same
+  Rich markup tags (`[bold]…[/]`) when the source has any;
 - the same backquoted spans. pflag shows the first backquoted word as a flag’s value name, so
-  `` `level` `` must stay `` `level` ``;
+  `` `level` `` must stay `` `level` ``, and Typer/Click help shows them as code;
 - no control characters or terminal escape sequences that the source doesn’t have.
 
 An entry that breaks a rule is ignored, and the English source is printed instead. The service applies
@@ -49,11 +67,14 @@ Users are matched to the closest catalog: `ja_JP.UTF-8` selects `ja`, `de_AT` se
 selects `pt-BR`. Only confident matches are used. Traditional Chinese (`zh_TW`) doesn’t match Simplified
 Chinese (`zh-Hans`), so those users see English until you add `zh-Hant`.
 
-## Cobra’s own strings
+## Your framework’s own strings
 
-The library includes translations of Cobra’s and pflag’s built-in text (help headings, the `help` and
-`completion` commands, and argument and flag errors) for Japanese, Simplified Chinese, Korean, Spanish,
-French, German and Brazilian Portuguese. Your catalogs take precedence over them.
+The runtimes include translations of the frameworks’ built-in text for Japanese, Simplified Chinese,
+Korean, Spanish, French, German and Brazilian Portuguese: Cobra’s and pflag’s help headings, `help` and
+`completion` commands and argument and flag errors (Go); Click’s, Typer’s and argparse’s usage and help
+headings, `Show this message and exit.`, `[default: …]`, `[required]`, `Missing argument`, `No such
+command`, `Invalid value`, `the following arguments are required`, … across the framework versions in use
+(Python). Your catalogs take precedence over them.
 
 ## Catalogs without the service
 

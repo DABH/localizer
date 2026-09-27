@@ -10,14 +10,14 @@ export default defineConfig({
 		starlight({
 			title: 'Localizer',
 			description:
-				'Ship your Go CLI in your users’ language: AI translations kept in sync through pull requests and compiled into your binary.',
+				'Ship your CLI in your users’ language: AI translations kept in sync through pull requests and shipped inside your binary or package. Go and Python.',
 			logo: { src: './src/assets/logo.svg' },
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/DABH/localizer' }],
 			editLink: { baseUrl: 'https://github.com/DABH/localizer/edit/main/site/' },
 			customCss: ['./src/styles/custom.css'],
 			components: { Footer: './src/components/Footer.astro' },
 			sidebar: [
-				{ label: 'Start here', items: ['getting-started', 'how-it-works'] },
+				{ label: 'Start here', items: ['getting-started', 'how-it-works', 'agents'] },
 				{
 					label: 'Guides',
 					items: ['guides/integration', 'guides/github-action', 'guides/github-app', 'guides/testing'],
