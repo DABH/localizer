@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
+# SPDX-License-Identifier: NCSA
+
 # Localizer GitHub Action: ask the Localizer service to sync this commit's translations (authenticated with
 # the workflow's short-lived GitHub OIDC token — no stored secrets), then apply the returned catalogs and
 # open or update one pull request with the repository's own token.

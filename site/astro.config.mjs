@@ -17,6 +17,7 @@ export default defineConfig({
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/DABH/localizer' }],
 			editLink: { baseUrl: 'https://github.com/DABH/localizer/edit/main/site/' },
 			customCss: ['./src/styles/custom.css'],
+			components: { Footer: './src/components/Footer.astro' },
 			sidebar: [
 				{ label: 'Start here', items: ['getting-started', 'how-it-works'] },
 				{

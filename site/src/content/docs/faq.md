@@ -47,5 +47,5 @@ Not yet. Python support (argparse, Click, Typer) is planned, using the same cata
 
 ## What does it cost?
 
-The runtime library is free and open source under the Apache License 2.0. The hosted translation service
-is in private preview.
+The runtime library is free and open source under the University of Illinois/NCSA Open Source License.
+The hosted translation service is in private preview.
