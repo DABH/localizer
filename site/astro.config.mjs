@@ -2,11 +2,9 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
-// Deployed to GitHub Pages by .github/workflows/pages.yml. For a custom domain, set `site` to it and
-// remove `base`.
+// Published at https://locale.dev by .github/workflows/site.yml.
 export default defineConfig({
-	site: 'https://dabh.github.io',
-	base: '/localizer',
+	site: 'https://locale.dev',
 	trailingSlash: 'always',
 	integrations: [
 		starlight({

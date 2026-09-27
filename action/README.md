@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: DABH/localizer/action@v0.3.0
+      - uses: DABH/localizer/action@v0.4.1
 ```
 
 Also enable **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**.
 
-Inputs, outputs and notes: see the [GitHub Action guide](https://dabh.github.io/localizer/guides/github-action/).
+Inputs, outputs and notes: see the [GitHub Action guide](https://locale.dev/guides/github-action/).
 The hosted service is in private preview and serves public repositories only.
