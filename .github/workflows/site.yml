@@ -29,6 +29,17 @@ jobs:
           cache-dependency-path: site/package-lock.json
       - run: npm ci
       - run: npm run build
+      - name: Check file types
+        # The locale.dev CDN serves a request as a file only when its extension is on this list (the
+        # request function in the service's site template); any other URL is treated as a page. A new
+        # kind of asset has to be added there first.
+        run: |
+          allowed='html|css|js|mjs|json|xml|txt|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|wasm|map|pdf|webmanifest|pagefind|pf_fragment|pf_index|pf_meta|pf_filter'
+          if unknown=$(find dist -type f | grep -vE "\.($allowed)$"); then
+            echo "::error::These files have an extension the CDN doesn't serve as a file; add it to the CDN function, then to this list:"
+            echo "$unknown"
+            exit 1
+          fi
       - if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v7
         with:
@@ -67,4 +78,14 @@ jobs:
       - name: Invalidate the CDN
         env:
           DISTRIBUTION: ${{ secrets.SITE_DISTRIBUTION_ID }}
-        run: aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths '/*' --query Invalidation.Id --output text
+        run: |
+          id=$(aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths '/*' --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$DISTRIBUTION" --id "$id"
+      - name: Verify
+        run: |
+          for p in / /getting-started/ /reference/runtime/; do
+            curl -fsS "https://locale.dev$p" | grep -q '<title>' || { echo "::error::https://locale.dev$p did not serve a page"; exit 1; }
+          done
+          test "$(curl -s -o /dev/null -w '%{http_code}' https://locale.dev/no-such-page/)" = 404
+          test "$(curl -s -o /dev/null -w '%{redirect_url}' https://locale.dev/getting-started)" = https://locale.dev/getting-started/
+          test "$(curl -s -o /dev/null -w '%{redirect_url}' 'https://www.locale.dev/faq/?a=1')" = 'https://locale.dev/faq/?a=1'
