@@ -24,6 +24,16 @@ type Token struct {
 	Width string // decimal width, or "" (a '*' width makes the format unsupported)
 	Prec  string // precision including the leading '.', or ""
 	Raw   string // the verb exactly as written, e.g. "%-10s" or "%[2]q"
+
+	// Python syntax only (see Syntax): Name is the field's identity ("name", "self.role", "0"; an
+	// auto-numbered "{}" gets its position), Conv its conversion ("r", "s" or "a" for "{x!r}", or the
+	// printf conversion character) and Spec its format spec (the text after ":" in "{x:>10}", or the
+	// printf flags, width, precision and length). Verb then holds a capture class rather than a Go verb:
+	// 'v' text, 'q' repr, 'd' integer, 'f' float, 'c' character.
+	Name string
+	Conv string
+	Spec string
+	Auto bool
 }
 
 // IsVerb reports whether t is a verb (as opposed to literal text).

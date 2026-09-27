@@ -20,10 +20,13 @@ var (
 	}
 )
 
-// Pseudo returns a pseudo-localized rendering of s: letters are replaced by accented look-alikes and the
-// text is wrapped in ⟦ ⟧, while placeholders, template actions, backquoted spans, quoted values, URLs,
-// flags and <args> are left intact. It makes untranslated or unhooked strings easy to spot.
-func Pseudo(s string) string {
+// Pseudo returns a pseudo-localized rendering of a Go string: letters are replaced by accented
+// look-alikes and the text is wrapped in ⟦ ⟧, while placeholders, template actions, backquoted spans,
+// quoted values, URLs, flags and <args> are left intact. It makes untranslated or unhooked strings easy
+// to spot. See PseudoSyntax for other syntaxes.
+func Pseudo(s string) string { return pseudo(s, pseudoProtect) }
+
+func pseudo(s string, protect *regexp.Regexp) string {
 	lead, core, trail := SplitSpace(s)
 	if core == "" {
 		return s
@@ -32,7 +35,7 @@ func Pseudo(s string) string {
 	b.WriteString(lead)
 	b.WriteString("⟦")
 	last := 0
-	for _, loc := range pseudoProtect.FindAllStringIndex(core, -1) {
+	for _, loc := range protect.FindAllStringIndex(core, -1) {
 		accent(&b, core[last:loc[0]])
 		b.WriteString(core[loc[0]:loc[1]])
 		last = loc[1]

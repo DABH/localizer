@@ -45,6 +45,7 @@ const (
 // Engine translates strings into one language. It is safe for concurrent use.
 type Engine struct {
 	lang   string
+	syntax msgfmt.Syntax
 	pseudo bool
 	// layers are consulted last to first (the app's catalog overrides Localizer's built-ins). Catalog
 	// keys are normally already trimmed; the rare untrimmed ones are indexed separately so that the large
@@ -63,10 +64,15 @@ type Engine struct {
 	memoSize atomic.Int64
 }
 
-// New builds an engine for lang from catalogs; later catalogs override earlier ones (pass Localizer's
-// built-in catalog first and the app's catalog last).
+// New builds an engine for lang from catalogs of Go strings; later catalogs override earlier ones (pass
+// Localizer's built-in catalog first and the app's catalog last).
 func New(lang string, catalogs ...map[string]string) *Engine {
-	e := &Engine{lang: lang}
+	return NewSyntax(lang, msgfmt.Go, catalogs...)
+}
+
+// NewSyntax is New for catalogs whose keys use the given placeholder syntax.
+func NewSyntax(lang string, syn msgfmt.Syntax, catalogs ...map[string]string) *Engine {
+	e := &Engine{lang: lang, syntax: syn}
 	for _, c := range catalogs {
 		if len(c) == 0 {
 			continue
@@ -88,9 +94,14 @@ func New(lang string, catalogs ...map[string]string) *Engine {
 	return e
 }
 
-// NewPseudo builds a pseudo-localizing engine that knows the given source strings.
+// NewPseudo builds a pseudo-localizing engine that knows the given Go source strings.
 func NewPseudo(catalogs ...map[string]string) *Engine {
-	e := &Engine{lang: "qps", pseudo: true}
+	return NewPseudoSyntax(msgfmt.Go, catalogs...)
+}
+
+// NewPseudoSyntax is NewPseudo for source strings in the given placeholder syntax.
+func NewPseudoSyntax(syn msgfmt.Syntax, catalogs ...map[string]string) *Engine {
+	e := &Engine{lang: "qps", syntax: syn, pseudo: true}
 	known := map[string]string{}
 	for _, c := range catalogs {
 		for k := range c {
@@ -105,6 +116,9 @@ func NewPseudo(catalogs ...map[string]string) *Engine {
 
 // Lang returns the engine's language tag.
 func (e *Engine) Lang() string { return e.lang }
+
+// Syntax returns the placeholder syntax of the engine's catalogs.
+func (e *Engine) Syntax() msgfmt.Syntax { return e.syntax }
 
 func (e *Engine) raw(core string) (string, bool) {
 	for i := len(e.layers) - 1; i >= 0; i-- {
@@ -253,7 +267,7 @@ func (e *Engine) exactHit(core string) (string, bool) {
 		return "", false
 	}
 	if e.pseudo {
-		return msgfmt.Pseudo(core), true
+		return msgfmt.PseudoSyntax(core, e.syntax), true
 	}
 	if !e.isValid(core, t) {
 		return "", false
@@ -267,7 +281,7 @@ func (e *Engine) isValid(src, tr string) bool {
 	if v, ok := e.valid.Load(src); ok {
 		return v.(bool)
 	}
-	ok := msgfmt.Extract(src).Equal(msgfmt.Extract(tr)) && !msgfmt.NewControlChars(src, tr)
+	ok := msgfmt.ExtractSyntax(src, e.syntax).Equal(msgfmt.ExtractSyntax(tr, e.syntax)) && !msgfmt.NewControlChars(src, tr)
 	e.valid.Store(src, ok)
 	return ok
 }
@@ -300,9 +314,13 @@ func plausible(p *msgfmt.Pattern, args map[int]string, verbs map[int]rune, mode 
 func (e *Engine) buildPatterns() {
 	e.index = map[string][]int{}
 	set := map[string]bool{}
+	marks := "%"
+	if e.syntax == msgfmt.Python {
+		marks = "%{"
+	}
 	for _, layer := range e.layers {
 		for k := range layer {
-			if strings.IndexByte(k, '%') >= 0 {
+			if strings.ContainsAny(k, marks) {
 				_, core, _ := msgfmt.SplitSpace(k)
 				set[core] = true
 			}
@@ -314,7 +332,7 @@ func (e *Engine) buildPatterns() {
 	}
 	sort.Strings(keys) // deterministic candidate order
 	for _, k := range keys {
-		p, ok := msgfmt.Compile(k)
+		p, ok := msgfmt.CompileSyntax(k, e.syntax)
 		if !ok {
 			continue
 		}
@@ -362,7 +380,7 @@ func (e *Engine) patternHit(core string, mode Mode, depth int) (string, bool) {
 	}
 	var translation string
 	if e.pseudo {
-		translation = msgfmt.Pseudo(best.Format)
+		translation = msgfmt.PseudoSyntax(best.Format, e.syntax)
 	} else {
 		t, ok := e.exactHit(best.Format)
 		if !ok {
@@ -370,7 +388,7 @@ func (e *Engine) patternHit(core string, mode Mode, depth int) (string, bool) {
 		}
 		translation = t
 	}
-	return msgfmt.Splice(translation, bestArgs, func(arg int, text string) string {
+	return best.Splice(translation, bestArgs, func(arg int, text string) string {
 		switch bestVerbs[arg] {
 		case 'w':
 			return e.translate(text, Error, depth+1)

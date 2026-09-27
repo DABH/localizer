@@ -1,0 +1,143 @@
+{
+  "description": "Engine behaviour on Python catalogs: exact hits, reverse-matched templates (captures of class v are translated again outside output mode), paragraphs and lines, and 'label: rest' splits in help and error modes.",
+  "groups": [
+    {
+      "name": "python errors",
+      "syntax": "python",
+      "catalog": {
+        "Role {self.role} does not own any application object with the name {self.name}, or the application object does not exist.": "ロール {self.role} は名前 {self.name} のアプリケーションオブジェクトを所有していないか、オブジェクトが存在しません。",
+        "Invalid connection configuration. {self.message}": "接続設定が無効です。{self.message}",
+        "No such option {name!r}.": "オプション {name!r} はありません。",
+        "Error": "エラー",
+        "Usage:": "使い方:",
+        "Try [blue]'{command_path} {help_option}'[/] for help.": "ヘルプは [blue]'{command_path} {help_option}'[/] をお試しください。",
+        "Missing argument": "引数がありません",
+        "the following arguments are required: %s": "次の引数が必要です: %s",
+        "Plugin {plugin_name} is not installed. Available plugins: {0}.": "プラグイン {plugin_name} はインストールされていません。利用可能なプラグイン: {0}。",
+        "bad translation {x}": "壊れた翻訳 {y}"
+      },
+      "cases": [
+        {
+          "input": "No such option '--foo'.",
+          "mode": "error",
+          "want": "オプション '--foo' はありません。"
+        },
+        {
+          "input": "Invalid connection configuration. Role admin does not own any application object with the name app1, or the application object does not exist.",
+          "mode": "error",
+          "want": "接続設定が無効です。ロール admin は名前 app1 のアプリケーションオブジェクトを所有していないか、オブジェクトが存在しません。"
+        },
+        {
+          "input": "Invalid connection configuration. HTTP 500: internal",
+          "mode": "error",
+          "want": "接続設定が無効です。HTTP 500: internal"
+        },
+        {
+          "input": "Try [blue]'snow sql --help'[/] for help.",
+          "mode": "error",
+          "want": "ヘルプは [blue]'snow sql --help'[/] をお試しください。"
+        },
+        {
+          "input": "Error: Missing argument",
+          "mode": "error",
+          "want": "エラー: 引数がありません"
+        },
+        {
+          "input": "the following arguments are required: name",
+          "mode": "error",
+          "want": "次の引数が必要です: name"
+        },
+        {
+          "input": "Plugin dbt is not installed. Available plugins: git, sql.",
+          "mode": "error",
+          "want": "プラグイン dbt はインストールされていません。利用可能なプラグイン: git, sql。"
+        },
+        {
+          "input": "bad translation 1",
+          "mode": "error",
+          "want": "bad translation 1"
+        },
+        {
+          "input": "Usage: snow [OPTIONS]",
+          "mode": "output",
+          "want": "Usage: snow [OPTIONS]"
+        },
+        {
+          "input": "Usage: snow [OPTIONS]",
+          "mode": "help",
+          "want": "使い方: snow [OPTIONS]"
+        }
+      ]
+    },
+    {
+      "name": "python help",
+      "syntax": "python",
+      "catalog": {
+        "Usage:": "使い方:",
+        "Options": "オプション",
+        "Show this message and exit.": "このメッセージを表示して終了します。",
+        "Add a task.": "タスクを追加します。",
+        "Identifier of the {sf_object}; for example: {example}": "{sf_object} の識別子。例: {example}",
+        "Lists all available {plural}.": "利用可能な {plural} を一覧表示します。"
+      },
+      "cases": [
+        {
+          "input": "Identifier of the compute pool; for example: my_pool",
+          "mode": "help",
+          "want": "compute pool の識別子。例: my_pool"
+        },
+        {
+          "input": "Add a task.\n\nUsage:",
+          "mode": "help",
+          "want": "タスクを追加します。\n\n使い方:"
+        },
+        {
+          "input": "  Add a task.\n",
+          "mode": "output",
+          "want": "  タスクを追加します。\n"
+        },
+        {
+          "input": "Lists all available compute pools.",
+          "mode": "help",
+          "want": "利用可能な compute pools を一覧表示します。"
+        },
+        {
+          "input": "Lists all available things that were created. Use it.",
+          "mode": "help",
+          "want": "Lists all available things that were created. Use it."
+        },
+        {
+          "input": "Show this message and exit.",
+          "mode": "help",
+          "want": "このメッセージを表示して終了します。"
+        }
+      ]
+    },
+    {
+      "name": "python pseudo",
+      "syntax": "python",
+      "pseudo": true,
+      "catalog": {
+        "No such option {name!r}.": "",
+        "Add a task.": ""
+      },
+      "cases": [
+        {
+          "input": "No such option 'x'.",
+          "mode": "help",
+          "want": "⟦Ñö šûçĥ öþţîöñ 'x'.⟧"
+        },
+        {
+          "input": "Add a task.",
+          "mode": "output",
+          "want": "⟦Åďď á ţášķ.⟧"
+        },
+        {
+          "input": "unknown",
+          "mode": "output",
+          "want": "unknown"
+        }
+      ]
+    }
+  ]
+}
