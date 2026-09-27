@@ -1,0 +1,46 @@
+{
+  "syntax": "python",
+  "description": "Pseudo-localization (LOCALIZER_LANG=qps): letters get accented look-alikes and the trimmed core is wrapped in ⟦ ⟧; fields, verbs, markup tags, escapes, backquoted spans, quoted values, URLs, flags and <args> are left alone.",
+  "cases": [
+    {
+      "input": "Created {name!r} with {n} items.",
+      "output": "⟦Çŕéáţéď {name!r} ŵîţĥ {n} îţéɱš.⟧"
+    },
+    {
+      "input": "%(name)s is 50% off",
+      "output": "⟦%(name)s îš 50% öƒƒ⟧"
+    },
+    {
+      "input": "[bold]Warning:[/bold] use \\[x\\]",
+      "output": "⟦[bold]Ŵáŕñîñĝ:[/bold] ûšé \\[x\\]⟧"
+    },
+    {
+      "input": "Run `snow sql` --format JSON <name>",
+      "output": "⟦Ŕûñ `snow sql` --format ĴŠÖÑ <name>⟧"
+    },
+    {
+      "input": "%-10s|%.2f",
+      "output": "⟦%-10s|%.2f⟧"
+    },
+    {
+      "input": "  padded  ",
+      "output": "  ⟦þáďďéď⟧  "
+    },
+    {
+      "input": "",
+      "output": ""
+    },
+    {
+      "input": "Use {{braces}} {x}",
+      "output": "⟦Ûšé {{ƀŕáçéš}} {x}⟧"
+    },
+    {
+      "input": "See https://locale.dev/docs and \"quoted\" text",
+      "output": "⟦Šéé https://locale.dev/docs áñď \"quoted\" ţéẋţ⟧"
+    },
+    {
+      "input": "Elapsed {t:.3f}s",
+      "output": "⟦Éļáþšéď {t:.3f}š⟧"
+    }
+  ]
+}

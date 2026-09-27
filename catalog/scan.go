@@ -11,8 +11,8 @@ import (
 
 // ParseFast decodes a catalog without encoding/json: a single pass that keeps unescaped strings as
 // substrings of one copy of the input, so startup cost stays well under a millisecond for thousands of
-// entries. It accepts exactly the catalog shape ({"version": N, "language": "...", "messages": {...}})
-// and falls back to Parse on anything else.
+// entries. It accepts exactly the catalog shape ({"version": N, "language": "...", "format": "...",
+// "messages": {...}}) and falls back to Parse on anything else.
 func ParseFast(data []byte) (*File, error) {
 	if !utf8.Valid(data) {
 		return Parse(data) // encoding/json's replacement-character semantics
@@ -42,6 +42,10 @@ func ParseFast(data []byte) (*File, error) {
 			f.Version = n
 		case "language":
 			if f.Language, ok = p.str(); !ok {
+				return Parse(data)
+			}
+		case "format":
+			if f.Format, ok = p.str(); !ok {
 				return Parse(data)
 			}
 		case "messages":

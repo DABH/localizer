@@ -14,9 +14,11 @@ type Placeholders struct {
 	Verbs      []string // "argIndex:flags width .prec verb", sorted and de-duplicated
 	Actions    []string // text/template actions, sorted and de-duplicated
 	Backquoted []string // `...` spans, sorted, with duplicates (pflag uses the first pair as a placeholder)
+	Tags       []string // Python: Rich markup tags and "\[" escapes, sorted, with duplicates
 }
 
-// Extract returns the placeholders in s. Verbs are only considered when s parses as a format string.
+// Extract returns the placeholders in a Go string. Verbs are only considered when s parses as a format
+// string. See ExtractSyntax for other syntaxes.
 func Extract(s string) Placeholders {
 	var p Placeholders
 	masked := s
@@ -61,7 +63,7 @@ func Extract(s string) Placeholders {
 
 // Equal reports whether two placeholder sets are identical.
 func (p Placeholders) Equal(o Placeholders) bool {
-	return equalStrings(p.Verbs, o.Verbs) && equalStrings(p.Actions, o.Actions) && equalStrings(p.Backquoted, o.Backquoted)
+	return equalStrings(p.Verbs, o.Verbs) && equalStrings(p.Actions, o.Actions) && equalStrings(p.Backquoted, o.Backquoted) && equalStrings(p.Tags, o.Tags)
 }
 
 // Diff describes how dst's placeholders differ from p (the source's). It returns "" when they match.
@@ -75,6 +77,9 @@ func (p Placeholders) Diff(dst Placeholders) string {
 	}
 	if !equalStrings(p.Backquoted, dst.Backquoted) {
 		probs = append(probs, fmt.Sprintf("backquoted spans differ: source has %q, translation has %q", p.Backquoted, dst.Backquoted))
+	}
+	if !equalStrings(p.Tags, dst.Tags) {
+		probs = append(probs, fmt.Sprintf("markup tags differ: source has %q, translation has %q", p.Tags, dst.Tags))
 	}
 	return strings.Join(probs, "; ")
 }
