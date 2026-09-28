@@ -7,7 +7,7 @@ name = "taskctl-demo"
 version = "0.0.0"
 description = "A small Typer CLI that uses Localizer."
 requires-python = ">=3.10"
-dependencies = ["typer>=0.12", "localizer"]
+dependencies = ["typer>=0.17", "localizer"]
 
 [project.scripts]
 taskctl = "taskctl.__main__:run"
