@@ -1,4 +1,5 @@
-# Localizer
+<p align="center"><img src="brand/logo.svg" width="96" height="96" alt="Localizer logo"></p>
+<h1 align="center">Localizer</h1>
 
 Localizer renders a CLI's own strings (help text, flag descriptions, messages, errors, prompts) in the
 user's language. Translations are produced by AI, kept in sync automatically through pull requests, and
