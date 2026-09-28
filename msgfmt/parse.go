@@ -42,7 +42,8 @@ func (t Token) IsVerb() bool { return t.Verb != 0 }
 const knownVerbs = "bcdeEfFgGoOpqstTUvxXw"
 
 // Parse splits a Go format string into literal and verb tokens, numbering verb arguments the way fmt does
-// (including explicit indexes such as %[2]s). ok is false if the string uses constructs that cannot be
+// (including explicit indexes such as %[2]s). A verb with only the space flag and nothing else ("% o" in
+// "50% of") is prose and stays literal. ok is false if the string uses constructs that cannot be
 // reverse-matched reliably: '*' widths or precisions, unknown verbs, malformed indexes or a trailing '%'.
 func Parse(format string) (toks []Token, ok bool) {
 	ok = true
@@ -79,6 +80,7 @@ func Parse(format string) (toks []Token, ok bool) {
 		}
 		flags := format[fStart:i]
 		var good bool
+		indexed := i < n && format[i] == '['
 		if argNum, i, good = argIndex(format, i, argNum); !good {
 			ok = false
 		}
@@ -97,6 +99,7 @@ func Parse(format string) (toks []Token, ok bool) {
 		if i < n && format[i] == '.' {
 			pStart := i
 			i++
+			indexed = indexed || (i < n && format[i] == '[')
 			if argNum, i, good = argIndex(format, i, argNum); !good {
 				ok = false
 			}
@@ -111,6 +114,7 @@ func Parse(format string) (toks []Token, ok bool) {
 			}
 			prec = format[pStart:i]
 		}
+		indexed = indexed || (i < n && format[i] == '[')
 		if argNum, i, good = argIndex(format, i, argNum); !good {
 			ok = false
 		}
@@ -123,6 +127,12 @@ func Parse(format string) (toks []Token, ok bool) {
 		i += size
 		if verb == '%' {
 			lit.WriteByte('%')
+			continue
+		}
+		if flags == " " && width == "" && prec == "" && !indexed {
+			// "50% off", "100% done": a bare space flag is prose, not a verb. The Python grammar has the
+			// same rule; see the conformance corpus.
+			lit.WriteString(format[start:i])
 			continue
 		}
 		if !strings.ContainsRune(knownVerbs, verb) {

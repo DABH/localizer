@@ -1,5 +1,5 @@
 {
-  "description": "Engine behaviour on Python catalogs: exact hits, reverse-matched templates (captures of class v are translated again outside output mode), paragraphs and lines, and 'label: rest' splits in help and error modes.",
+  "description": "Engine behaviour: exact hits, reverse-matched templates (captures of class v are translated again outside output mode, except a lone identifier captured by a built-in template), paragraphs and lines, 'label: rest' splits in help and error modes, and plausibility. A group's optional `builtin` catalog is the runtime's own (passed first); `catalog` is the application's.",
   "groups": [
     {
       "name": "python errors",
@@ -136,6 +136,203 @@
           "input": "unknown",
           "mode": "output",
           "want": "unknown"
+        }
+      ]
+    },
+    {
+      "name": "go help",
+      "syntax": "go",
+      "builtin": {
+        "Generate the autocompletion script for %s": "%s 用の自動補完スクリプトを生成します",
+        "Generate the autocompletion script for %[1]s for the specified shell.\nSee each sub-command's help for details on how to use the generated script.": "指定したシェル用の %[1]s の自動補完スクリプトを生成します。\n生成したスクリプトの使い方は各サブコマンドのヘルプを参照してください。",
+        "help for %s": "%s のヘルプ",
+        "Manage %s.": "%s を管理します。"
+      },
+      "catalog": {
+        "List Kafka clusters.": "Kafka クラスターを一覧表示します。"
+      },
+      "cases": [
+        {
+          "input": "Generate the autocompletion script for taskctl for the specified shell.\nSee each sub-command's help for details on how to use the generated script.",
+          "mode": "help",
+          "want": "指定したシェル用の taskctl の自動補完スクリプトを生成します。\n生成したスクリプトの使い方は各サブコマンドのヘルプを参照してください。"
+        },
+        {
+          "input": "Generate the autocompletion script for taskctl",
+          "mode": "help",
+          "want": "taskctl 用の自動補完スクリプトを生成します"
+        },
+        {
+          "input": "Generate the autocompletion script for taskctl for the specified shell.",
+          "mode": "help",
+          "want": "Generate the autocompletion script for taskctl for the specified shell."
+        },
+        {
+          "input": "Manage Apache Kafka®.",
+          "mode": "help",
+          "want": "Apache Kafka® を管理します。"
+        },
+        {
+          "input": "Manage your clusters. Log in to see all commands.",
+          "mode": "help",
+          "want": "Manage your clusters. Log in to see all commands."
+        },
+        {
+          "input": "List Kafka clusters.\n\n  $ confluent kafka cluster list",
+          "mode": "help",
+          "want": "Kafka クラスターを一覧表示します。\n\n  $ confluent kafka cluster list"
+        }
+      ]
+    },
+    {
+      "name": "go errors",
+      "syntax": "go",
+      "builtin": {
+        "version %s": "バージョン %s",
+        "unknown command %q for %q%s": "%[2]q のコマンド %[1]q は不明です%[3]s",
+        "Did you mean this?": "もしかして:",
+        "Error:": "エラー:",
+        "Run '%v --help' for usage.": "使い方は '%v --help' を実行してください。",
+        "invalid argument %q for %q flag: %v": "フラグ %[2]q の引数 %[1]q が無効です: %[3]v",
+        "topic already exists": "トピックはすでに存在します"
+      },
+      "catalog": {
+        "status": "状態",
+        "app": "アプリ",
+        "failed to create topic %q: %w": "トピック %[1]q の作成に失敗しました: %[2]w",
+        "failed to sync %s: %v": "%[1]s の同期に失敗しました: %[2]v",
+        "topic already exists": "トピックはすでに存在します"
+      },
+      "cases": [
+        {
+          "input": "version mismatch between client and server",
+          "mode": "error",
+          "want": "version mismatch between client and server"
+        },
+        {
+          "input": "version 1.2.3",
+          "mode": "error",
+          "want": "バージョン 1.2.3"
+        },
+        {
+          "input": "Error: unknown command \"stat\" for \"app\"\n\nDid you mean this?\n\tstatus\n",
+          "mode": "error",
+          "want": "エラー: \"app\" のコマンド \"stat\" は不明です\n\nもしかして:\n\tstatus\n"
+        },
+        {
+          "input": "Run 'app status --help' for usage.",
+          "mode": "error",
+          "want": "使い方は 'app status --help' を実行してください。"
+        },
+        {
+          "input": "invalid argument \"x\" for \"--count\" flag: topic already exists",
+          "mode": "error",
+          "want": "フラグ \"--count\" の引数 \"x\" が無効です: トピックはすでに存在します"
+        },
+        {
+          "input": "failed to sync orders: topic already exists",
+          "mode": "error",
+          "want": "orders の同期に失敗しました: トピックはすでに存在します"
+        },
+        {
+          "input": "failed to create topic \"orders\": topic already exists",
+          "mode": "error",
+          "want": "トピック \"orders\" の作成に失敗しました: トピックはすでに存在します"
+        },
+        {
+          "input": "failed to create topic \"orders\": HTTP 500. Try again",
+          "mode": "error",
+          "want": "トピック \"orders\" の作成に失敗しました: HTTP 500. Try again"
+        },
+        {
+          "input": "Run 'status --help' for usage.",
+          "mode": "error",
+          "want": "使い方は 'status --help' を実行してください。"
+        }
+      ]
+    },
+    {
+      "name": "go ties",
+      "syntax": "go",
+      "builtin": {
+        "Invalid value: %s": "値が無効です（組み込み）: %s"
+      },
+      "catalog": {
+        "Invalid value: %s": "値が無効です: %s",
+        "Invalid %s: %s": "無効な %[1]s: %[2]s"
+      },
+      "cases": [
+        {
+          "input": "Invalid value: 42",
+          "mode": "error",
+          "want": "値が無効です: 42"
+        }
+      ]
+    },
+    {
+      "name": "python ties and errors",
+      "syntax": "python",
+      "builtin": {
+        "Invalid value: {message}": "値が無効です（組み込み）: {message}",
+        "version {version}": "バージョン {version}",
+        "Error: {message}": "エラー: {message}",
+        "Try '{command} --help' for help.": "ヘルプは '{command} --help' を実行してください。"
+      },
+      "catalog": {
+        "Invalid value: {value}": "値が無効です: {value}",
+        "status": "状態",
+        "Missing argument": "引数がありません"
+      },
+      "cases": [
+        {
+          "input": "Invalid value: 42",
+          "mode": "error",
+          "want": "値が無効です: 42"
+        },
+        {
+          "input": "version mismatch between client and server",
+          "mode": "error",
+          "want": "version mismatch between client and server"
+        },
+        {
+          "input": "version 1.2",
+          "mode": "error",
+          "want": "バージョン 1.2"
+        },
+        {
+          "input": "Error\n\tstatus\n",
+          "mode": "error",
+          "want": "Error\n\tstatus\n"
+        },
+        {
+          "input": "Error: Missing argument",
+          "mode": "error",
+          "want": "エラー: 引数がありません"
+        },
+        {
+          "input": "Try 'status --help' for help.",
+          "mode": "error",
+          "want": "ヘルプは 'status --help' を実行してください。"
+        }
+      ]
+    },
+    {
+      "name": "python help sentences",
+      "syntax": "python",
+      "builtin": {
+        "Generate the autocompletion script for {shell}": "{shell} 用の自動補完スクリプトを生成します"
+      },
+      "catalog": {},
+      "cases": [
+        {
+          "input": "Generate the autocompletion script for taskctl for the specified shell.",
+          "mode": "help",
+          "want": "Generate the autocompletion script for taskctl for the specified shell."
+        },
+        {
+          "input": "Generate the autocompletion script for bash",
+          "mode": "help",
+          "want": "bash 用の自動補完スクリプトを生成します"
         }
       ]
     }

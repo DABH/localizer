@@ -1,0 +1,92 @@
+{
+  "syntax": "go",
+  "description": "Reverse matching of Go formats. Same file format as roundtrip.json; captures are keyed by 0-based argument position.",
+  "cases": [
+    {
+      "name": "two strings",
+      "format": "Created %s \"%s\".\n",
+      "input": "Created API key \"ABC\".\n",
+      "captures": {
+        "0": "API key",
+        "1": "ABC"
+      },
+      "classes": {
+        "0": "s",
+        "1": "s"
+      },
+      "translation": "%[1]s「\"%[2]s\"」を作成しました。\n",
+      "spliced": "API key「\"ABC\"」を作成しました。\n"
+    },
+    {
+      "name": "quoted and wrapped",
+      "format": "failed to create topic %q: %w",
+      "input": "failed to create topic \"orders\": exists",
+      "captures": {
+        "0": "\"orders\"",
+        "1": "exists"
+      },
+      "classes": {
+        "0": "q",
+        "1": "w"
+      }
+    },
+    {
+      "name": "integer must be a number",
+      "format": "accepts %d arg(s), received %d",
+      "input": "accepts two arg(s), received 3",
+      "match": false
+    },
+    {
+      "name": "integers",
+      "format": "accepts %d arg(s), received %d",
+      "input": "accepts 2 arg(s), received 3",
+      "captures": {
+        "0": "2",
+        "1": "3"
+      },
+      "translation": "%[1]d 個の引数を受け付けますが、%[2]d 個を受け取りました",
+      "spliced": "2 個の引数を受け付けますが、3 個を受け取りました"
+    },
+    {
+      "name": "no letters does not compile",
+      "format": "%s: %s",
+      "compiles": false
+    },
+    {
+      "name": "prose does not compile",
+      "format": "50% off",
+      "compiles": false
+    },
+    {
+      "name": "captures never cross lines",
+      "format": "Generate the autocompletion script for %s",
+      "input": "Generate the autocompletion script for x\nmore",
+      "match": false
+    },
+    {
+      "name": "multi-line format",
+      "format": "Generate the autocompletion script for %[1]s for the specified shell.\nSee each sub-command's help for details on how to use the generated script.",
+      "input": "Generate the autocompletion script for taskctl for the specified shell.\nSee each sub-command's help for details on how to use the generated script.",
+      "captures": {
+        "0": "taskctl"
+      }
+    },
+    {
+      "name": "repeated argument must repeat",
+      "format": "%[1]s is %[1]s",
+      "input": "a is b",
+      "match": false
+    },
+    {
+      "name": "translation with a missing verb does not splice",
+      "format": "Created %s \"%s\".",
+      "input": "Created a \"b\".",
+      "captures": {
+        "0": "a",
+        "1": "b"
+      },
+      "translation": "%[3]s",
+      "splices": false
+    }
+  ]
+}

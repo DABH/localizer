@@ -36,10 +36,11 @@ const (
 )
 
 const (
-	maxDepth   = 8
-	maxMemo    = 8192
-	idxLen     = 4
-	maxPrepass = 64 << 10 // strings longer than this are not memoized or split
+	maxDepth     = 8
+	maxMemoBytes = 1 << 20 // total size of memoized inputs and outputs
+	maxMemoEntry = 1024    // longer strings are looked up every time rather than kept
+	idxLen       = 4
+	maxPrepass   = 64 << 10 // strings longer than this are not split
 )
 
 // Engine translates strings into one language. It is safe for concurrent use.
@@ -51,11 +52,16 @@ type Engine struct {
 	// keys are normally already trimmed; the rare untrimmed ones are indexed separately so that the large
 	// app catalog never has to be copied at startup.
 	layers []map[string]string
+	// appFrom is the index of the first layer that belongs to the application's catalog (the last one
+	// given to New); earlier layers are the runtime's built-in catalog.
+	appFrom int
 
 	OnMiss func(s string, mode Mode) // optional debug hook, called for letter-bearing misses in Help mode
 
 	patOnce  sync.Once
 	patterns []*msgfmt.Pattern
+	patLayer []int // the layer each pattern's format came from
+	multi    []int // patterns whose format spans lines
 	index    map[string][]int
 	wild     []int
 
@@ -65,7 +71,9 @@ type Engine struct {
 }
 
 // New builds an engine for lang from catalogs of Go strings; later catalogs override earlier ones (pass
-// Localizer's built-in catalog first and the app's catalog last).
+// Localizer's built-in catalog first and the app's catalog last). When more than one catalog is given,
+// the last one is the application's: its templates win ties against the built-in ones, and a lone
+// identifier captured by a built-in template (a command or flag name) is never translated again.
 func New(lang string, catalogs ...map[string]string) *Engine {
 	return NewSyntax(lang, msgfmt.Go, catalogs...)
 }
@@ -73,25 +81,45 @@ func New(lang string, catalogs ...map[string]string) *Engine {
 // NewSyntax is New for catalogs whose keys use the given placeholder syntax.
 func NewSyntax(lang string, syn msgfmt.Syntax, catalogs ...map[string]string) *Engine {
 	e := &Engine{lang: lang, syntax: syn}
-	for _, c := range catalogs {
+	for i, c := range catalogs {
+		if i == len(catalogs)-1 {
+			e.appFrom = len(e.layers)
+		}
 		if len(c) == 0 {
 			continue
 		}
-		var fixed map[string]string
-		for k, v := range c {
-			if _, core, _ := msgfmt.SplitSpace(k); core != k {
-				if fixed == nil {
-					fixed = map[string]string{}
-				}
-				fixed[core] = v
-			}
-		}
 		e.layers = append(e.layers, c)
-		if fixed != nil {
+		if fixed := trimmedKeys(c); len(fixed) > 0 {
 			e.layers = append(e.layers, fixed)
 		}
 	}
 	return e
+}
+
+// trimmedKeys copies the entries whose key carries surrounding whitespace under the trimmed key, so that
+// they are found by the trimmed lookups. An exact trimmed key wins over any copy, and when several keys
+// trim to the same text the smallest original key wins, so the choice never depends on map order.
+func trimmedKeys(c map[string]string) map[string]string {
+	var fixed map[string]string
+	origin := map[string]string{}
+	for k, v := range c {
+		_, core, _ := msgfmt.SplitSpace(k)
+		if core == k {
+			continue
+		}
+		if _, exact := c[core]; exact {
+			continue
+		}
+		if prev, ok := origin[core]; ok && prev < k {
+			continue
+		}
+		if fixed == nil {
+			fixed = map[string]string{}
+		}
+		origin[core] = k
+		fixed[core] = v
+	}
+	return fixed
 }
 
 // NewPseudo builds a pseudo-localizing engine that knows the given Go source strings.
@@ -150,7 +178,7 @@ func (e *Engine) Translate(s string, mode Mode) string {
 		return s
 	}
 	// Help strings are translated once each at startup; memoizing them would only cost allocations.
-	cacheable := len(s) <= maxPrepass && mode != Help
+	cacheable := len(s) <= maxMemoEntry && mode != Help
 	if cacheable {
 		if v, ok := e.memo[mode].Load(s); ok {
 			return v.(string)
@@ -162,9 +190,9 @@ func (e *Engine) Translate(s string, mode Mode) string {
 			e.OnMiss(s, mode)
 		}
 	}
-	if cacheable && e.memoSize.Load() < maxMemo {
+	if cacheable && e.memoSize.Load() < maxMemoBytes {
 		if _, loaded := e.memo[mode].LoadOrStore(s, out); !loaded {
-			e.memoSize.Add(1)
+			e.memoSize.Add(int64(len(s) + len(out)))
 		}
 	}
 	return out
@@ -183,8 +211,13 @@ func (e *Engine) translate(s string, mode Mode, depth int) string {
 	}
 	multiline := strings.Contains(core, "\n")
 	// Help text with several lines is almost always composed (Examples, Long with code blocks): try its
-	// parts before any pattern, which saves regex work at startup.
+	// parts before any single-line pattern, which saves regex work at startup. Formats that span lines
+	// themselves (Cobra's completion help) are tried first, or their first line would match a one-line
+	// format and capture the rest as a value.
 	if multiline && mode == Help && len(core) <= maxPrepass {
+		if t, ok := e.multilineHit(core, mode, depth); ok {
+			return lead + t + trail
+		}
 		if t, ok := e.segments(core, mode, depth); ok {
 			return lead + t + trail
 		}
@@ -226,12 +259,35 @@ func (e *Engine) joinParts(parts []string, sep string, mode Mode, depth int) (st
 		if mode == Help && strings.HasPrefix(strings.TrimSpace(p), "$ ") {
 			continue // shell example
 		}
+		if mode == Error && identifierLine(p) {
+			continue // a suggested command or flag name, never a message
+		}
 		if np := e.translate(p, mode, depth+1); np != p {
 			parts[i] = np
 			changed = true
 		}
 	}
 	return strings.Join(parts, sep), changed
+}
+
+// identifierLine reports an indented line that holds a single identifier-like token, such as the
+// command names Cobra lists under "Did you mean this?".
+func identifierLine(line string) bool {
+	return line != "" && (line[0] == '\t' || line[0] == ' ') && identifierToken(strings.TrimSpace(line))
+}
+
+// identifierToken reports a single token made of letters, digits and "-_./:": a command name, a flag
+// name, a path. Never a message.
+func identifierToken(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && !strings.ContainsRune("-_./:", r) {
+			return false
+		}
+	}
+	return true
 }
 
 // labelSplit handles "Label: rest" by translating the label (with or without its colon) and the rest
@@ -289,45 +345,58 @@ func (e *Engine) isValid(src, tr string) bool {
 var sentenceBreak = regexp.MustCompile(`[.!?。！？]\s*\p{Lu}`)
 
 // plausible rejects reverse matches that would splice untranslated prose into a translation. A capture
-// stands for a value (a name, an ID, a number): it must not span sentences or lines, and a generic
-// pattern (little literal text, like "Manage %s.") must not capture a lowercase phrase. Error mode is
-// exempt for wrapped errors (%w, %v), whose captures legitimately carry long server or library text.
+// stands for a value (a name, an ID, a number): a generic pattern (little literal text, like "Manage %s.")
+// must not capture a lowercase phrase, and outside error messages a capture must not span sentences or
+// lines, nor, in help text, end a sentence. Wrapped errors (%w) are exempt from everything, and captures
+// in error messages may span lines and sentences: they legitimately carry server or library text, and
+// Cobra's "unknown command" error carries its suggestions in a %s.
 func plausible(p *msgfmt.Pattern, args map[int]string, verbs map[int]rune, mode Mode) bool {
 	generic := p.Letters() < 10
 	for a, c := range args {
-		v := verbs[a]
-		if v == 'w' || (mode == Error && v == 'v') {
+		if verbs[a] == 'w' {
 			continue
 		}
-		if mode != Error && (strings.Contains(c, "\n") || sentenceBreak.MatchString(c)) {
-			return false
-		}
-		if generic && mode != Error && strings.Contains(c, " ") {
+		if generic && strings.Contains(c, " ") {
 			if r, _ := utf8.DecodeRuneInString(c); unicode.IsLower(r) {
 				return false
 			}
+		}
+		if mode == Error {
+			continue
+		}
+		if strings.Contains(c, "\n") || sentenceBreak.MatchString(c) {
+			return false
+		}
+		if mode == Help && strings.Contains(c, " ") && endsSentence(c) {
+			return false
 		}
 	}
 	return true
 }
 
+// endsSentence reports whether s ends with a sentence-ending mark.
+func endsSentence(s string) bool {
+	r, size := utf8.DecodeLastRuneInString(s)
+	return size > 0 && strings.ContainsRune(".!?。！？", r)
+}
+
 func (e *Engine) buildPatterns() {
 	e.index = map[string][]int{}
-	set := map[string]bool{}
 	marks := "%"
 	if e.syntax == msgfmt.Python {
 		marks = "%{"
 	}
-	for _, layer := range e.layers {
+	layerOf := map[string]int{} // format -> the highest layer holding it
+	for i, layer := range e.layers {
 		for k := range layer {
 			if strings.ContainsAny(k, marks) {
 				_, core, _ := msgfmt.SplitSpace(k)
-				set[core] = true
+				layerOf[core] = i
 			}
 		}
 	}
-	keys := make([]string, 0, len(set))
-	for k := range set {
+	keys := make([]string, 0, len(layerOf))
+	for k := range layerOf {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys) // deterministic candidate order
@@ -338,6 +407,10 @@ func (e *Engine) buildPatterns() {
 		}
 		i := len(e.patterns)
 		e.patterns = append(e.patterns, p)
+		e.patLayer = append(e.patLayer, layerOf[k])
+		if strings.Contains(k, "\n") {
+			e.multi = append(e.multi, i)
+		}
 		pre := p.Prefix()
 		if pre == "" {
 			e.wild = append(e.wild, i)
@@ -350,50 +423,80 @@ func (e *Engine) buildPatterns() {
 	}
 }
 
+// match is the best reverse match found so far.
+type match struct {
+	p     *msgfmt.Pattern
+	layer int
+	args  map[int]string
+	verbs map[int]rune
+}
+
+// consider tries pattern i against core and keeps it when it beats the current best: more literal text
+// wins; at equal specificity the application's catalog beats the built-in one, and within a layer the
+// first candidate (formats are sorted) wins.
+func (e *Engine) consider(m *match, i int, core string, mode Mode) {
+	p := e.patterns[i]
+	if m.p != nil {
+		if s, best := p.Specificity(), m.p.Specificity(); s < best || (s == best && e.patLayer[i] <= m.layer) {
+			return
+		}
+	}
+	if args, verbs, ok := p.Match(core); ok && plausible(p, args, verbs, mode) {
+		m.p, m.layer, m.args, m.verbs = p, e.patLayer[i], args, verbs
+	}
+}
+
 func (e *Engine) patternHit(core string, mode Mode, depth int) (string, bool) {
 	e.patOnce.Do(e.buildPatterns)
 	if len(e.patterns) == 0 {
 		return "", false
 	}
-	var best *msgfmt.Pattern
-	var bestArgs map[int]string
-	var bestVerbs map[int]rune
-	try := func(i int) {
-		p := e.patterns[i]
-		if best != nil && p.Specificity() <= best.Specificity() {
-			return
-		}
-		if args, verbs, ok := p.Match(core); ok && plausible(p, args, verbs, mode) {
-			best, bestArgs, bestVerbs = p, args, verbs
-		}
-	}
+	var m match
 	for n := 1; n <= idxLen && n <= len(core); n++ {
 		for _, i := range e.index[core[:n]] {
-			try(i)
+			e.consider(&m, i, core, mode)
 		}
 	}
 	for _, i := range e.wild {
-		try(i)
+		e.consider(&m, i, core, mode)
 	}
-	if best == nil {
+	return e.render(&m, mode, depth)
+}
+
+// multilineHit tries only the formats that span lines.
+func (e *Engine) multilineHit(core string, mode Mode, depth int) (string, bool) {
+	e.patOnce.Do(e.buildPatterns)
+	var m match
+	for _, i := range e.multi {
+		e.consider(&m, i, core, mode)
+	}
+	return e.render(&m, mode, depth)
+}
+
+// render splices the captured values into the best match's translation. Wrapped errors are translated
+// again; so are %v captures outside output mode, except a lone identifier captured by a built-in format
+// (Cobra's "Run '%v --help'" carries a command name there, never a message).
+func (e *Engine) render(m *match, mode Mode, depth int) (string, bool) {
+	if m.p == nil {
 		return "", false
 	}
 	var translation string
 	if e.pseudo {
-		translation = msgfmt.PseudoSyntax(best.Format, e.syntax)
+		translation = msgfmt.PseudoSyntax(m.p.Format, e.syntax)
 	} else {
-		t, ok := e.exactHit(best.Format)
+		t, ok := e.exactHit(m.p.Format)
 		if !ok {
 			return "", false
 		}
 		translation = t
 	}
-	return best.Splice(translation, bestArgs, func(arg int, text string) string {
-		switch bestVerbs[arg] {
+	builtin := m.layer < e.appFrom
+	return m.p.Splice(translation, m.args, func(arg int, text string) string {
+		switch m.verbs[arg] {
 		case 'w':
 			return e.translate(text, Error, depth+1)
 		case 'v':
-			if mode != Output {
+			if mode != Output && !(builtin && identifierToken(text)) {
 				return e.translate(text, mode, depth+1)
 			}
 		}
