@@ -6,6 +6,10 @@ description: Install the Localizer GitHub App and merge the pull requests it ope
 The GitHub App is the hands-off option. Install it on a repository, and Localizer opens a pull request
 whenever your strings change. You don’t need to add anything to your workflows.
 
+**[Install the Localizer GitHub App](https://github.com/apps/localedev/installations/new)**, then choose the
+account and the repositories to translate. On GitHub the App is called **localedev**, and its pull requests
+come from `localedev[bot]`.
+
 :::note[Subscription]
 The App works for GitHub accounts with a subscription: see [Pricing](/pricing/).
 :::
