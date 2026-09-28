@@ -71,7 +71,7 @@ Point it at [AGENTS.md](https://locale.dev/AGENTS.md); see [Using a coding agent
    <TabItem label="Python">
    - `yourcli/locales/__init__.py` and `yourcli/locales/ja.json`, `yourcli/locales/de.json`, … inside your
      package (with `src/` layouts too);
-   - `localizer.localize(app, "yourcli.locales")` right before the app runs, and `localizer-py` in
+   - `localizer.localize(app, "yourcli.locales")` right before the app runs, and `localizer` in
      `pyproject.toml`’s dependencies. Regenerate your lock file if you keep one, and with setuptools make
      sure the JSON files are packaged (`[tool.setuptools.package-data]`).
    </TabItem>

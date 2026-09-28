@@ -32,8 +32,8 @@ other keeps its translations.
 
 ## Which PyPI package do I install?
 
-`localizer-py` (`pip install localizer-py`), which you import as `localizer`. The PyPI project named
-`localizer` is unrelated.
+`localizer` (`pip install localizer`), imported as `localizer`. `localizer-py`, the name of the first
+release, remains as an alias that installs the same package.
 
 ## My CLI builds its commands lazily or through plugins. Does that work?
 

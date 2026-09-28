@@ -24,24 +24,47 @@ jobs:
             export SETUPTOOLS_SCM_PRETEND_VERSION="${GITHUB_REF_NAME#v}"
           fi
           uv build python/ --out-dir dist
-      - name: Smoke-test the wheel
+          uv build python/alias --out-dir dist-alias
+      - name: Smoke-test the wheels
         run: |
           uv venv --python 3.10 smoke
           uv pip install --python smoke/bin/python dist/*.whl
           smoke/bin/python -c 'import localizer, localizer.builtin as b; print(localizer.__version__, b.languages())'
+          # The alias depends on the release being built, which isn't on PyPI yet: check its metadata only.
+          uv pip install --python smoke/bin/python --no-deps dist-alias/*.whl
+          smoke/bin/python -c 'import importlib.metadata as m; d = m.metadata("localizer-py"); print(d["Name"], d["Version"], d.get_all("Requires-Dist"))'
       - uses: actions/upload-artifact@v7
         with:
           name: dist
-          path: dist/
+          path: |
+            dist/
+            dist-alias/
 
+  # Trusted publishing: PyPI accepts this repository's OIDC token for the "pypi" environment on the localizer
+  # project and for "pypi-alias" on localizer-py; no API token is stored anywhere.
   publish:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
-    # Trusted publishing: PyPI accepts this repository's OIDC token for the "pypi" environment; no API
-    # token is stored anywhere.
     environment:
       name: pypi
+      url: https://pypi.org/p/localizer
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  publish-alias:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: publish # the alias depends on the release above being available
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi-alias
       url: https://pypi.org/p/localizer-py
     permissions:
       id-token: write
@@ -49,5 +72,6 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: dist
-          path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-alias/

@@ -2,7 +2,7 @@
 
 > Localizer renders a command-line tool's own strings (help, options, messages, errors, prompts) in the user's language. It supports Go (Cobra) and Python (Typer, Click, argparse) CLIs. AI translations are kept in sync through pull requests by a hosted GitHub App or GitHub Action, and applied by a small runtime library with no network calls. Open-source runtime (NCSA license); the service serves public repositories.
 
-The one line: Go `localizer.Localize(root, locales.FS)`; Python `localizer.localize(app, "yourcli.locales")`. Go module: github.com/DABH/localizer. PyPI package: localizer-py (import name localizer; the PyPI project "localizer" is unrelated).
+The one line: Go `localizer.Localize(root, locales.FS)`; Python `localizer.localize(app, "yourcli.locales")`. Go module: github.com/DABH/localizer. PyPI package: localizer (import name localizer; localizer-py is an alias of it).
 
 ## Integration
 
@@ -29,4 +29,4 @@ The one line: Go `localizer.Localize(root, locales.FS)`; Python `localizer.local
 
 - [GitHub repository](https://github.com/DABH/localizer)
 - [Go package documentation](https://pkg.go.dev/github.com/DABH/localizer)
-- [PyPI: localizer-py](https://pypi.org/project/localizer-py/)
+- [PyPI: localizer](https://pypi.org/project/localizer/)
