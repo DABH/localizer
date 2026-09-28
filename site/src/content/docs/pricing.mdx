@@ -1,0 +1,34 @@
+---
+title: Pricing
+description: Localizer's plans for individual developers, small teams and enterprises. The runtime libraries are free and open source.
+tableOfContents: false
+---
+
+import Plans from '../../components/Plans.astro';
+
+The runtime libraries are free and open source. The hosted service, which translates your CLI's strings
+and keeps them in sync through pull requests, is a monthly subscription for the GitHub account that owns
+your repositories.
+
+<Plans />
+
+## How it works
+
+- **A translation is one string translated into one language.** Setting up a CLI with 500 strings in 7
+  languages uses 3,500 translations. After that, only new or changed strings count, which is usually a
+  small fraction of the allowance. Translations are remembered, so the same string is never paid for twice.
+- **If a month's allowance runs out,** Localizer translates what fits, finishing languages one at a time,
+  and continues after the allowance renews on the 1st of the next month. Unused translations don't roll
+  over.
+- **One subscription covers every public repository** of one GitHub account, personal or organization.
+  Localizer serves public (open-source) repositories only.
+- **Plans by size:** Solo is for personal GitHub accounts, Team is for organizations with fewer than 100
+  employees, and Enterprise is for organizations of any size. See the [Terms of Service](/terms/).
+- **Payments are handled by [Polar](https://polar.sh), our merchant of record.** Prices are in US dollars;
+  sales tax or VAT is added where it applies. Polar sends your receipts and a link to its customer portal,
+  where you can change or cancel your plan at any time. A canceled plan keeps working until the end of the
+  period you paid for.
+- **Enterprise** includes a 99.9% monthly uptime commitment with service credits (see the
+  [SLA](/sla/)), support answered within one business day, and help with your security review.
+
+Questions? Email [saluton@locale.dev](mailto:saluton@locale.dev).

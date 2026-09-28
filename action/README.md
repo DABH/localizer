@@ -28,4 +28,4 @@ jobs:
 Also enable **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**.
 
 Inputs, outputs and notes: see the [GitHub Action guide](https://locale.dev/guides/github-action/).
-The hosted service is in private preview and serves public repositories only.
+The hosted service needs a subscription for the repository's GitHub account ([pricing](https://locale.dev/pricing/)) and serves public repositories only.

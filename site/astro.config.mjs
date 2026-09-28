@@ -17,7 +17,7 @@ export default defineConfig({
 			customCss: ['./src/styles/custom.css'],
 			components: { Footer: './src/components/Footer.astro' },
 			sidebar: [
-				{ label: 'Start here', items: ['getting-started', 'how-it-works', 'agents'] },
+				{ label: 'Start here', items: ['getting-started', 'how-it-works', 'pricing', 'agents'] },
 				{
 					label: 'Guides',
 					items: ['guides/integration', 'guides/github-action', 'guides/github-app', 'guides/testing'],

@@ -24,6 +24,8 @@ The one line: Go `localizer.Localize(root, locales.FS)`; Python `localizer.local
 - [Catalogs](https://locale.dev/reference/catalogs/): the catalog format and validation rules
 - [Runtime library](https://locale.dev/reference/runtime/): Go and Python APIs, environment variables, language selection
 - [FAQ](https://locale.dev/faq/)
+- [Pricing](https://locale.dev/pricing/): plans for individuals, small teams and enterprises
+- [Terms of Service](https://locale.dev/terms/), [Privacy Policy](https://locale.dev/privacy/), [Enterprise SLA](https://locale.dev/sla/)
 
 ## Source
 

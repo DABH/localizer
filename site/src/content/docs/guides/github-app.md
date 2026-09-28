@@ -6,9 +6,8 @@ description: Install the Localizer GitHub App and merge the pull requests it ope
 The GitHub App is the hands-off option. Install it on a repository, and Localizer opens a pull request
 whenever your strings change. You don’t need to add anything to your workflows.
 
-:::note[Private preview]
-The App is available to preview participants.
-[Request access](https://github.com/DABH/localizer/issues/new?template=access.yml).
+:::note[Subscription]
+The App works for GitHub accounts with a subscription: see [Pricing](/pricing/).
 :::
 
 ## What it does
