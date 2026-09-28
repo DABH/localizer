@@ -63,8 +63,8 @@ Two more switches help with coverage:
 - `LOCALIZER_DEBUG=1` reports untranslated strings (and, in Python, hook errors that were swallowed) on
   stderr.
 - `LOCALIZER_DUMP=<file>` writes every help string in the command tree as JSON, including whether each one
-  was translated. Go writes it when `Localize` runs; Python writes it the first time help renders, so run
-  `--help`:
+  was translated. Go writes it when `Localize` runs, and so does Python for an argparse parser; for Typer
+  and Click, Python writes it the first time help renders, so run `--help`:
 
   ```json
   {
@@ -76,7 +76,8 @@ Two more switches help with coverage:
   }
   ```
 
-  `kind` is one of `short`, `long`, `example`, `deprecated`, `group`, `flag` or `flag_deprecated`.
+  `kind` is one of `short`, `long`, `example`, `deprecated`, `group`, `flag` or `flag_deprecated`; Python
+  writes `epilog` in place of `example` and has no `flag_deprecated`.
 
 ## Terminal width
 
