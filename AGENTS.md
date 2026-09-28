@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: DABH/localizer/action@v0.4.1
+      - uses: DABH/localizer/action@v0.5.0
 ```
 
 (and tell the user to enable **Settings → Actions → General → Allow GitHub Actions to create and approve
