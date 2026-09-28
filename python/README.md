@@ -1,4 +1,4 @@
-# localizer-py
+# localizer
 
 Render a Typer, Click or argparse CLI's own strings — help text, option descriptions, messages,
 errors, prompts — in the user's language. Translations come from JSON catalogs committed to your
@@ -11,7 +11,7 @@ string it finds in your code. This package is the runtime half — the part that
 machines.
 
 ```sh
-pip install localizer-py   # not "localizer", which is an unrelated project
+pip install localizer   # "localizer-py", the name of the first release, is an alias of this package
 ```
 
 Python 3.10 or newer, no dependencies. Works with Click 8.1+, Typer 0.17+ (including Typer's

@@ -7,7 +7,7 @@ name = "taskctl-demo"
 version = "0.0.0"
 description = "A small Typer CLI that uses Localizer."
 requires-python = ">=3.10"
-dependencies = ["typer>=0.12", "localizer-py"]
+dependencies = ["typer>=0.12", "localizer"]
 
 [project.scripts]
 taskctl = "taskctl.__main__:run"
@@ -15,6 +15,6 @@ taskctl = "taskctl.__main__:run"
 [tool.hatch.build.targets.wheel]
 packages = ["taskctl"]
 
-# Developing against this checkout; a real project depends on the published localizer-py.
+# Developing against this checkout; a real project depends on the published localizer package.
 [tool.uv.sources]
-localizer-py = { path = "../..", editable = true }
+localizer = { path = "../..", editable = true }
