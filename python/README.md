@@ -11,7 +11,7 @@ string it finds in your code. This package is the runtime half — the part that
 machines.
 
 ```sh
-pip install localizer   # "localizer-py", the name of the first release, is an alias of this package
+pip install localizer
 ```
 
 Python 3.10 or newer, no dependencies. Works with Click 8.1+, Typer 0.17+ (including Typer's

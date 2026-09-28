@@ -32,8 +32,7 @@ backend (`[build-system]` in `pyproject.toml`: hatchling, poetry, flit, pdm, uv 
 - Go: `go get github.com/DABH/localizer@latest && go mod tidy`.
 - Python: add `localizer` with the project's own tool so lock files stay consistent: `uv add localizer`,
   `poetry add localizer`, or add it to `[project] dependencies` in `pyproject.toml` and regenerate
-  `uv.lock` / `poetry.lock` / `requirements*.txt`. The import name is also `localizer`. (`localizer-py`, the
-  name of the first release, is an alias of the same package.)
+  `uv.lock` / `poetry.lock` / `requirements*.txt`. The import name is also `localizer`.
 
 ### 3. Create the locales package with empty catalogs
 
@@ -193,8 +192,8 @@ later pushes update it.
 ## Working on this repository
 
 - Layout: the Go runtime at the root (`localizer.go`, `catalog/`, `engine/`, `msgfmt/`, `internal/`), the
-  Python runtime in `python/` (`localizer/`, `tests/`, `examples/taskctl/`; published to PyPI as `localizer`,
-  with `python/alias/` publishing the `localizer-py` alias),
+  Python runtime in `python/` (`localizer/`, `tests/`, `examples/taskctl/`; published to PyPI as `localizer`;
+  `python/alias/` is a compatibility distribution),
   the GitHub Action in `action/`, the documentation site in `site/` (Astro Starlight, deployed to
   https://locale.dev), and the shared conformance corpus in `testdata/conformance/` (its README is the
   specification of the placeholder grammar and the engine; both runtimes run the same vectors).
