@@ -19,7 +19,7 @@ The App is available to preview participants.
   one rolling pull request, **Update translations**, from the `localizer-translations` branch.
 - It never pushes to your default branch. It writes only your catalogs, plus, in the onboarding pull
   request, `.localizer.yml`, the locales package file (`locales/embed.go` or `locales/__init__.py`), the
-  one-line integration and, for Python, the `localizer-py` dependency in `pyproject.toml`. An allowlist in
+  one-line integration and, for Python, the `localizer` dependency in `pyproject.toml`. An allowlist in
   the service enforces this.
 
 ## Permissions

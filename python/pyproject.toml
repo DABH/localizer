@@ -3,7 +3,7 @@ requires = ["hatchling>=1.27", "hatch-vcs>=0.4"]
 build-backend = "hatchling.build"
 
 [project]
-name = "localizer-py"
+name = "localizer"
 dynamic = ["version"]
 description = "Render your Typer, Click or argparse CLI in the user's language with Localizer catalogs."
 readme = "README.md"
@@ -11,7 +11,7 @@ license = "NCSA"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = []
-import-names = ["localizer"]  # PEP 794: pip install localizer-py, import localizer
+import-names = ["localizer"]  # PEP 794
 authors = [{ name = "Snizyx Software LLC" }]
 keywords = ["localization", "i18n", "cli", "typer", "click", "argparse"]
 classifiers = [

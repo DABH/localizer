@@ -3,7 +3,7 @@
 Localizer renders a command-line tool's own strings — help text, option descriptions, messages, errors,
 prompts — in the user's language. Translations are JSON catalogs kept in the CLI's repository: a hosted
 service (GitHub App or GitHub Action) writes and maintains them through pull requests, and a small runtime
-library (Go: `github.com/DABH/localizer`; Python: `localizer-py`) applies them when the CLI runs. Nothing is
+library (Go: `github.com/DABH/localizer`; Python: `localizer` on PyPI) applies them when the CLI runs. Nothing is
 downloaded at runtime, and English output is unchanged.
 
 This file has two audiences: agents integrating Localizer into **another** repository (next section), and
@@ -30,10 +30,10 @@ backend (`[build-system]` in `pyproject.toml`: hatchling, poetry, flit, pdm, uv 
 ### 2. Add the dependency
 
 - Go: `go get github.com/DABH/localizer@latest && go mod tidy`.
-- Python: add `localizer-py` — **not** `localizer`, an unrelated PyPI project — with the project's own tool
-  so lock files stay consistent: `uv add localizer-py`, `poetry add localizer-py`, or add it to
-  `[project] dependencies` in `pyproject.toml` and regenerate `uv.lock` / `poetry.lock` /
-  `requirements*.txt`. The import name is `localizer`.
+- Python: add `localizer` with the project's own tool so lock files stay consistent: `uv add localizer`,
+  `poetry add localizer`, or add it to `[project] dependencies` in `pyproject.toml` and regenerate
+  `uv.lock` / `poetry.lock` / `requirements*.txt`. The import name is also `localizer`. (`localizer-py`, the
+  name of the first release, is an alias of the same package.)
 
 ### 3. Create the locales package with empty catalogs
 
@@ -193,7 +193,8 @@ later pushes update it.
 ## Working on this repository
 
 - Layout: the Go runtime at the root (`localizer.go`, `catalog/`, `engine/`, `msgfmt/`, `internal/`), the
-  Python runtime in `python/` (`localizer/`, `tests/`, `examples/taskctl/`; published as `localizer-py`),
+  Python runtime in `python/` (`localizer/`, `tests/`, `examples/taskctl/`; published to PyPI as `localizer`,
+  with `python/alias/` publishing the `localizer-py` alias),
   the GitHub Action in `action/`, the documentation site in `site/` (Astro Starlight, deployed to
   https://locale.dev), and the shared conformance corpus in `testdata/conformance/` (its README is the
   specification of the placeholder grammar and the engine; both runtimes run the same vectors).

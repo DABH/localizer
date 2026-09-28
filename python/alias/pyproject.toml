@@ -1,0 +1,35 @@
+# The first release of the Python runtime was published as "localizer-py" because the PyPI name "localizer"
+# belonged to an unrelated project. Its author handed the name over, so the package is now "localizer" and
+# this metadata-only distribution keeps "pip install localizer-py" working by depending on it.
+[build-system]
+requires = ["hatchling>=1.27", "hatch-vcs>=0.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "localizer-py"
+dynamic = ["version"]
+description = "Renamed to localizer: installing localizer-py installs the localizer package."
+readme = "README.md"
+license = "NCSA"
+requires-python = ">=3.10"
+dependencies = ["localizer>=0.5.1"]
+authors = [{ name = "Snizyx Software LLC" }]
+classifiers = [
+  "Development Status :: 7 - Inactive",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.urls]
+Homepage = "https://locale.dev/"
+"Use instead" = "https://pypi.org/project/localizer/"
+Source = "https://github.com/DABH/localizer"
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { root = "../..", local_scheme = "no-local-version" }
+
+[tool.hatch.build.targets.wheel]
+bypass-selection = true # metadata only: no modules
+
+[tool.hatch.build.targets.sdist]
+include = ["/README.md", "/pyproject.toml"]
