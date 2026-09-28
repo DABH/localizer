@@ -16,27 +16,91 @@ if [[ ! -d .git ]]; then
   exit 1
 fi
 
-oidc_token() {
-  curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-    "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$LOCALIZER_AUDIENCE" | jq -r .value
+# Every request retries transient failures (a dropped connection, a 5xx) and gives up after a minute.
+CURL=(curl -sS --retry 4 --retry-all-errors --retry-delay 5 --max-time 60)
+
+oidc_token() { # a fresh token for one request (they expire after a few minutes); never printed
+  local token
+  token="$("${CURL[@]}" -f -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+    "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$LOCALIZER_AUDIENCE" | jq -r '.value // empty')" || return 1
+  [[ -n "$token" ]] || return 1
+  printf '%s' "$token"
 }
 
-api() { # method path — a fresh token per call (they expire after a few minutes); never printed
-  curl -sS -X "$1" -H "Authorization: Bearer $(oidc_token)" -H "Accept: application/json" "$LOCALIZER_API$2"
+api() { # method path — prints the response body; fails when the request could not be made at all
+  local token
+  token="$(oidc_token)" || return 1
+  "${CURL[@]}" -X "$1" -H "Authorization: Bearer $token" -H "Accept: application/json" "$LOCALIZER_API$2"
 }
 
-resp="$(api POST /sync)"
-job="$(jq -r '.job // empty' <<<"$resp")"
+detail() { # the message in a JSON error body, or else the body itself — on one line, so that it cannot
+  # smuggle a workflow command into the log
+  { jq -r '.detail // .error // .' <<<"$1" 2>/dev/null || printf '%s' "${1:0:300}"; } | tr -s '\000-\037\177' ' '
+}
+
+# Where the service may write. The result is data from the network, so every path has to be a plain
+# relative path — no absolute paths, backslashes, colons (a Windows drive or stream) or control characters,
+# and every component a real name: not empty, "." or "..", and not .git or .github in any letter case (the
+# runner's disk may be case-insensitive, and Windows drops trailing dots and spaces from a name). And it has
+# to be one of the files the service produces: a catalog (*.json), an integration source file (*.go, *.py),
+# pyproject.toml, or .localizer.yml in the repository root. A rejected path is reported and nothing is written.
+validate_path() {
+  local p="$1" rest comp trimmed shown
+  shown="$(printf '%q' "$p")"
+  if [[ -z "$p" ]]; then
+    echo "::error::Refusing to write an empty path"
+    return 1
+  fi
+  if [[ "$p" == /* || "$p" == *\\* || "$p" == *:* || "$p" == *[[:cntrl:]]* ]]; then
+    echo "::error::Refusing to write $shown: absolute, or with a backslash, colon or control character"
+    return 1
+  fi
+  rest="$p"
+  while :; do
+    comp="${rest%%/*}"
+    case "$comp" in
+      '' | . | ..)
+        echo "::error::Refusing to write $shown: empty, . or .. path component"
+        return 1 ;;
+    esac
+    trimmed="$comp"
+    while [[ "$trimmed" == *. || "$trimmed" == *' ' ]]; do trimmed="${trimmed%?}"; done
+    case "$trimmed" in
+      .[Gg][Ii][Tt] | .[Gg][Ii][Tt][Hh][Uu][Bb])
+        echo "::error::Refusing to write $shown: inside .git or .github"
+        return 1 ;;
+    esac
+    [[ "$rest" == */* ]] || break
+    rest="${rest#*/}"
+  done
+  case "$p" in
+    *.json | *.go | *.py | pyproject.toml | */pyproject.toml | .localizer.yml) return 0 ;;
+  esac
+  echo "::error::Refusing to write $shown: not a catalog, a source file, pyproject.toml or .localizer.yml"
+  return 1
+}
+
+if ! resp="$(api POST /sync)"; then
+  echo "::error::Could not reach Localizer at $LOCALIZER_API."
+  exit 1
+fi
+job="$(jq -r '.job // empty' <<<"$resp" 2>/dev/null | tr -d '\000-\037\177')" || job=""
 if [[ -z "$job" ]]; then
-  echo "::error::Localizer refused the request: $(jq -r '.error // .' <<<"$resp")"
+  echo "::error::Localizer refused the request: $(detail "$resp")"
   exit 1
 fi
 echo "Localizer job $job queued for ${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7}"
 
+# Poll until the job ends. An answer that is not JSON, or has no status (a proxy's error page, a 5xx), is
+# a warning and another try, until the deadline.
 deadline=$(( $(date +%s) + LOCALIZER_TIMEOUT_MINUTES * 60 ))
 while :; do
-  st="$(api GET "/jobs/$job")"
-  status="$(jq -r '.status // "unknown"' <<<"$st")"
+  status=""
+  if st="$(api GET "/jobs/$job")"; then
+    status="$(jq -r '.status // empty' <<<"$st" 2>/dev/null | tr -d '\000-\037\177')" || status=""
+  else
+    st=""
+  fi
   case "$status" in
     done) break ;;
     up-to-date)
@@ -44,32 +108,66 @@ while :; do
       echo "status=up-to-date" >>"$GITHUB_OUTPUT"
       exit 0 ;;
     queued|running) ;;
+    "") echo "::warning::No job status from Localizer, retrying${st:+: $(detail "$st")}" ;;
     *)
-      echo "::error::Localizer job $status: $(jq -r '.detail // .error // .' <<<"$st")"
+      echo "::error::Localizer job $status: $(detail "$st")"
       exit 1 ;;
   esac
   if (( $(date +%s) > deadline )); then
-    echo "::error::Timed out waiting for translations (job $job is still $status)."
+    echo "::error::Timed out waiting for translations (job $job is ${status:-not answering})."
     exit 1
   fi
   sleep 15
 done
 
+result_url="$(jq -r '.result_url // empty' <<<"$st")"
+if [[ "$result_url" != https://* ]]; then
+  echo "::error::Localizer job $job finished without a result."
+  exit 1
+fi
 result="$(mktemp)"
-curl -sSf "$(jq -r .result_url <<<"$st")" -o "$result"
+if ! "${CURL[@]}" -f "$result_url" -o "$result"; then
+  echo "::error::Could not download the result of Localizer job $job."
+  exit 1
+fi
 
-# Write the files. The service only ever returns catalogs (and, on a first run, the one-line integration),
-# but never trust paths blindly.
-mapfile -t paths < <(jq -r '.files[].path' "$result")
+# The result: {title, body, files: [{path, content}], ...}. Check its shape before trusting any of it (a
+# NUL in a path would split it into two below, so it is rejected here).
+if ! jq -e '(.title | type) == "string" and (.body | type) == "string" and (.files | type) == "array"
+  and all(.files[]?; (.path | type) == "string" and (.content | type) == "string"
+    and (.path | explode | index(0)) == null)' "$result" >/dev/null; then
+  echo "::error::Localizer returned a malformed result."
+  exit 1
+fi
+
+# Check every path first, so that a bad one means nothing gets written. Paths are read NUL-delimited: a
+# newline in a path is a control character, not a record separator.
+count="$(jq '.files | length' "$result")"
+paths=()
+while IFS= read -r -d '' p; do
+  validate_path "$p" || exit 1
+  paths+=("$p")
+done < <(jq -j '.files[].path + "\u0000"' "$result")
+if (( ${#paths[@]} != count )); then
+  echo "::error::Localizer returned a malformed result."
+  exit 1
+fi
+if (( count == 0 )); then
+  echo "Nothing to write."
+  echo "status=up-to-date" >>"$GITHUB_OUTPUT"
+  exit 0
+fi
+
+# Write the validated paths, each with the content at the same index.
+i=0
 for p in "${paths[@]}"; do
-  case "$p" in
-    /*|*..*|.git/*|.github/*) echo "::error::Refusing to write $p"; exit 1 ;;
-  esac
-done
-jq -r '.files[] | @base64' "$result" | while read -r f; do
-  p="$(base64 -d <<<"$f" | jq -r .path)"
-  mkdir -p "$(dirname "$p")"
-  base64 -d <<<"$f" | jq -j .content >"$p"
+  if [[ "$(jq -r ".files[$i].path" "$result")" != "$p" ]] || ! validate_path "$p"; then
+    echo "::error::Localizer returned a malformed result."
+    exit 1
+  fi
+  mkdir -p -- "$(dirname -- "$p")"
+  jq -j ".files[$i].content" "$result" >"$p"
+  i=$((i + 1))
 done
 
 git config user.name "github-actions[bot]"
@@ -83,12 +181,19 @@ if git diff --cached --quiet; then
   exit 0
 fi
 git commit -q -m "$(jq -r .title "$result")"
-git push -q --force origin "$LOCALIZER_BRANCH"
+
+# Push with the github-token input, whichever credentials actions/checkout kept: gh hands the token to git
+# as a credential helper, and the push ignores the Authorization header checkout may have stored for its own
+# token (which would otherwise take precedence). The token is never printed.
+gh auth setup-git
+git -c "http.${GITHUB_SERVER_URL:-https://github.com}/.extraheader=" push -q --force origin "$LOCALIZER_BRANCH"
 
 body="$(mktemp)"
 jq -r .body "$result" >"$body"
 title="$(jq -r .title "$result")"
-number="$(gh pr list --head "$LOCALIZER_BRANCH" --state open --json number --jq '.[0].number // empty')"
+# Only a pull request from this repository's own branch: --head also matches a fork's branch of that name.
+number="$(gh pr list --head "$LOCALIZER_BRANCH" --state open --json number,isCrossRepository \
+  --jq '[.[] | select(.isCrossRepository | not)][0].number // empty')"
 if [[ -n "$number" ]]; then
   gh pr edit "$number" --title "$title" --body-file "$body" >/dev/null
   url="$(gh pr view "$number" --json url --jq .url)"
