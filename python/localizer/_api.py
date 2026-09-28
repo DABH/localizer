@@ -74,9 +74,9 @@ def _setup(locales, env_var: str | Sequence[str] | None, language: str | None) -
         override.insert(0, env_var)
     elif env_var:
         override = [*env_var, ENV_LANG]
-    if language is not None:
+    if language is not None and language.strip():
         res = _locale.detect(["_forced"], lambda _name: language)
-    else:
+    else:  # None or "" (an unset --lang option, say): detect
         res = _locale.detect(override)
     if res.off:
         return None
@@ -151,6 +151,12 @@ def uninstall() -> None:
     """Removes every hook and forgets the language (for tests)."""
     global _state, _hooks_installed
     _state = None
+    try:
+        from . import _dump
+
+        _dump.reset()
+    except Exception:
+        debug_exc("uninstall")
     if _hooks_installed:
         try:
             from . import _hooks
