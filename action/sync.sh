@@ -108,7 +108,13 @@ while :; do
       echo "status=up-to-date" >>"$GITHUB_OUTPUT"
       exit 0 ;;
     queued|running) ;;
-    "") echo "::warning::No job status from Localizer, retrying${st:+: $(detail "$st")}" ;;
+    "")
+      # An answer with an error message and no status is the service refusing (403, 404): not transient.
+      if [[ -n "$st" ]] && jq -e '.error | type == "string"' <<<"$st" >/dev/null 2>&1; then
+        echo "::error::Localizer refused the request: $(detail "$st")"
+        exit 1
+      fi
+      echo "::warning::No job status from Localizer, retrying${st:+: $(detail "$st")}" ;;
     *)
       echo "::error::Localizer job $status: $(detail "$st")"
       exit 1 ;;
