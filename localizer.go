@@ -9,8 +9,9 @@
 //	localizer.Localize(rootCmd, locales.FS)
 //
 // where locales.FS is an embed.FS holding "<language>.json" catalogs (see the catalog format in the docs).
-// Localization never makes network calls; strings without a translation, and all dynamic data such as
-// server responses, are printed unchanged.
+// Localization never makes network calls. Strings without a translation are printed unchanged, and so is
+// dynamic data such as server responses, unless a line happens to equal a catalog entry or to match one
+// of its format strings, in which case that line is translated too.
 //
 // Environment controls:
 //
@@ -18,7 +19,8 @@
 //	LOCALIZER_LANG=en|off  disable localization
 //	LOCALIZER_LANG=qps     pseudo-localize every known string (QA: shows what flows through Localizer)
 //	LOCALIZER_DEBUG=1      report untranslated help strings on stderr
-//	LOCALIZER_DUMP=<file>  write every help string in the command tree, with hit/miss, as JSON
+//	LOCALIZER_DUMP=<file>  write every help string in the command tree, with hit/miss, as JSON (a new
+//	                       file; ignored when the process runs with elevated privileges)
 package localizer
 
 import (
@@ -75,8 +77,9 @@ func WithLanguage(tag string) Option {
 	return func(c *config) { c.lang = tag }
 }
 
-// WithoutErrWriter keeps Localize from wrapping the root command's error writer. Cobra's own error
-// messages are then printed in English.
+// WithoutErrWriter keeps Localize from wrapping the root command's error writer, and from translating
+// its error prefix. Cobra's own error messages are then printed in English. Use it when the application
+// asserts that cmd.ErrOrStderr() is an *os.File (the wrapper exposes Fd, but is not one).
 func WithoutErrWriter() Option {
 	return func(c *config) { c.writers = false }
 }
@@ -86,8 +89,16 @@ func withEnv(getenv func(string) string, osLangs func() []string) Option {
 	return func(c *config) { c.getenv, c.osLangs = getenv, osLangs }
 }
 
+// withArgs replaces the process arguments Localize inspects; used by tests.
+func withArgs(args []string) Option {
+	return func(c *config) { c.args = args }
+}
+
 func newConfig(opts []Option) *config {
-	c := &config{getenv: os.Getenv, stderr: os.Stderr, writers: true, args: os.Args[1:]}
+	c := &config{getenv: os.Getenv, stderr: os.Stderr, writers: true}
+	if len(os.Args) > 1 {
+		c.args = os.Args[1:]
+	}
 	for _, o := range opts {
 		o(c)
 	}
@@ -95,18 +106,33 @@ func newConfig(opts []Option) *config {
 }
 
 // Init detects the user's language and loads the matching catalog from catalogs, enabling T, Sprintf,
-// Errorf, Error and Writer. It returns the selected language, or "" when output stays in English. Most
-// Cobra applications call Localize instead, which calls Init. Init can be called again to switch catalogs.
+// Errorf, Error, Translate and Writer. It returns the selected language, or "" when output stays in
+// English. Most Cobra applications call Localize instead, which calls Init. Init can be called again to
+// switch catalogs: the helpers and the hooks Localize installed follow the new choice, but strings a
+// localized command tree has already rendered keep their translation. Init never panics; a failure
+// leaves output in English.
 func Init(catalogs fs.FS, opts ...Option) string {
 	initMu.Lock()
 	defer initMu.Unlock()
-	st := setup(catalogs, newConfig(opts))
+	cfg := newConfig(opts)
+	var st *state
+	safely(cfg, "init", func() { st = setup(catalogs, cfg) })
 	current.Store(st)
 	inited.Store(true)
 	if st == nil {
 		return ""
 	}
 	return st.lang
+}
+
+// Reset undoes Init: the helpers become identity functions again and the next Localize detects the
+// language afresh. It exists for tests. Command trees that were already localized keep the strings
+// they translated.
+func Reset() {
+	initMu.Lock()
+	defer initMu.Unlock()
+	current.Store(nil)
+	inited.Store(false)
 }
 
 func setup(catalogs fs.FS, cfg *config) *state {
@@ -173,6 +199,29 @@ func debugf(cfg *config, format string, args ...any) {
 	}
 }
 
+// Mode selects how Translate treats composite text; see the engine package.
+type Mode = engine.Mode
+
+// Modes for Translate: ModeOutput for general output, ModeHelp for help text, ModeError for error
+// messages.
+const (
+	ModeOutput = engine.Output
+	ModeHelp   = engine.Help
+	ModeError  = engine.Error
+)
+
+// Translate returns the translation of s in the given mode, or s unchanged: exact catalog matches,
+// format strings matched against their formatted output, and composite text split into paragraphs,
+// lines and (outside Output mode) "label: rest" parts. It is what Writer and Error use; call it for
+// output chokepoints that need a mode of their own.
+func Translate(s string, mode Mode) string {
+	st := current.Load()
+	if st == nil || s == "" {
+		return s
+	}
+	return st.eng.Translate(s, mode)
+}
+
 // Lang returns the active language tag ("qps" for pseudo-localization), or "" when output is English.
 func Lang() string {
 	if st := current.Load(); st != nil {
@@ -223,34 +272,47 @@ func Error(err error) string {
 
 // Writer returns a writer that translates CLI strings written to w, one Write call at a time (so
 // prompts without a trailing newline are passed through immediately). It returns w itself when output is
-// not being localized. The returned writer exposes w's Fd method, if any, for terminal detection.
+// not being localized. The returned writer exposes w's Fd method, if any, for terminal detection, and
+// follows later Init calls.
 func Writer(w io.Writer) io.Writer {
-	st := current.Load()
-	if st == nil {
+	if current.Load() == nil {
 		return w
 	}
-	return &writer{w: w, eng: st.eng, mode: engine.Output}
+	return &writer{w: w, mode: engine.Output}
 }
 
 type writer struct {
 	w      io.Writer
-	eng    *engine.Engine
 	mode   engine.Mode
 	prefix string // a known prefix such as cobra's "Error:", stripped before translating
 }
 
-func (w *writer) Write(p []byte) (int, error) {
-	s := string(p)
-	var out string
-	if w.prefix != "" && strings.HasPrefix(s, w.prefix+" ") {
-		out = w.prefix + " " + w.eng.Translate(s[len(w.prefix)+1:], w.mode)
-	} else {
-		out = w.eng.Translate(s, w.mode)
-	}
+// Write translates p and writes the result. Whatever fails inside the translation, p itself is written.
+func (w *writer) Write(p []byte) (n int, err error) {
+	out := string(p)
+	func() {
+		defer func() {
+			if recover() != nil {
+				out = string(p)
+			}
+		}()
+		out = w.translate(out)
+	}()
 	if _, err := io.WriteString(w.w, out); err != nil {
 		return 0, err
 	}
 	return len(p), nil
+}
+
+func (w *writer) translate(s string) string {
+	st := current.Load()
+	if st == nil {
+		return s
+	}
+	if w.prefix != "" && strings.HasPrefix(s, w.prefix+" ") {
+		return w.prefix + " " + st.eng.Translate(s[len(w.prefix)+1:], w.mode)
+	}
+	return st.eng.Translate(s, w.mode)
 }
 
 // Fd returns the file descriptor of the underlying writer, so isatty-style checks keep working.

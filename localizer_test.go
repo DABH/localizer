@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -32,6 +33,8 @@ func env(m map[string]string) Option {
 func newTestCLI() *cobra.Command {
 	root := &cobra.Command{Use: "demo", Short: "Demo CLI.", Long: "Demo is a tool for testing Localizer."}
 	root.PersistentFlags().Bool("verbose", false, "Enable verbose output.")
+	root.PersistentFlags().String("topic-name", "", "Topic name to use.")
+	_ = root.PersistentFlags().MarkDeprecated("topic-name", "use --name instead.")
 	topic := &cobra.Command{Use: "topic", Short: "Manage topics.", GroupID: "admin"}
 	create := &cobra.Command{
 		Use:     "create <name>",
@@ -253,7 +256,7 @@ func TestLocalizeTwiceAndDump(t *testing.T) {
 	if out, _, _ := run(second, "--help"); !strings.Contains(out, "トピックを管理します。") {
 		t.Errorf("second tree not localized:\n%s", out)
 	}
-	if child(second, "topic").Long != "" || child(child(second, "topic"), "create").Short != "Create a topic." {
+	if create := child(child(second, "topic"), "create"); create.Short != "Create a topic." || !strings.HasPrefix(create.Example, "Create a topic named orders.") {
 		t.Error("commands that were never displayed should not have been translated (lazy translation)")
 	}
 	_ = root
@@ -320,4 +323,159 @@ func BenchmarkLocalize(b *testing.B) {
 		b.StartTimer()
 		Localize(root, fsys, env(vars))
 	}
+}
+
+func TestPerCommandHelpAndUsageFuncs(t *testing.T) {
+	reset()
+	root := withBuffers(newTestCLI())
+	topic := child(root, "topic")
+	topic.SetHelpFunc(func(c *cobra.Command, _ []string) { fmt.Fprintln(c.OutOrStdout(), "CUSTOM HELP:", c.Short) })
+	topic.SetUsageFunc(func(c *cobra.Command) error {
+		fmt.Fprintln(c.OutOrStderr(), "CUSTOM USAGE:", c.Short)
+		return nil
+	})
+	Localize(root, testCatalogs, env(map[string]string{"LANG": "ja_JP.UTF-8"}))
+	if out, _, _ := run(root, "topic", "--help"); out != "CUSTOM HELP: トピックを管理します。\n" {
+		t.Errorf("own help function not translated: %q", out)
+	}
+	// create inherits topic's usage function; a usage error renders it for create.
+	if out, _, _ := run(root, "topic", "create"); !strings.Contains(out, "CUSTOM USAGE: トピックを作成します。") {
+		t.Errorf("inherited own usage function not translated: %q", out)
+	}
+}
+
+func TestWithoutErrWriterKeepsCobraErrorsEnglish(t *testing.T) {
+	reset()
+	root := withBuffers(newTestCLI())
+	Localize(root, testCatalogs, env(map[string]string{"LANG": "ja_JP.UTF-8"}), WithoutErrWriter())
+	if Lang() != "ja" {
+		t.Fatalf("Lang() = %q", Lang())
+	}
+	_, errOut, _ := run(root, "tpic")
+	if !strings.HasPrefix(errOut, "Error: unknown command \"tpic\" for \"demo\"") {
+		t.Errorf("error prefix or message translated despite WithoutErrWriter: %q", errOut)
+	}
+	if out, _, _ := run(root, "topic", "--help"); !strings.Contains(out, "トピックを管理します。") {
+		t.Errorf("help should still be translated: %q", out)
+	}
+}
+
+func TestCompletionRequestTranslatesEagerly(t *testing.T) {
+	reset()
+	root := withBuffers(newTestCLI())
+	raw := &cobra.Command{Use: "raw", Short: "Manage topics.", DisableFlagParsing: true, Run: func(*cobra.Command, []string) {}}
+	root.AddCommand(raw)
+	Localize(root, testCatalogs, env(map[string]string{"LANG": "ja_JP.UTF-8"}), withArgs([]string{cobra.ShellCompRequestCmd, "topic", ""}))
+	if create := child(child(root, "topic"), "create"); create.Short != "トピックを作成します。" {
+		t.Errorf("completion mode must translate every command up front, got %q", create.Short)
+	}
+	if raw.Flags().Lookup("help") != nil {
+		t.Error("a command that parses its own flags gained a --help flag")
+	}
+	if child(root, "topic").Flags().Lookup("help") == nil {
+		t.Error("ordinary commands should have their help flag ready for completion")
+	}
+}
+
+func TestDeprecationNoticesUseTranslatedReasons(t *testing.T) {
+	root := localized(t, map[string]string{"LANG": "ja_JP.UTF-8"})
+	out, _, _ := run(root, "topic", "create", "orders", "--topic-name", "x")
+	if !strings.Contains(out, "代わりに --name を使ってください。") {
+		t.Errorf("deprecation reason not translated before parsing: %q", out)
+	}
+}
+
+func TestSecondInitSwitchesHelpersAndHooks(t *testing.T) {
+	root := localized(t, map[string]string{"LANG": "ja_JP.UTF-8"})
+	if T("Manage topics.") != "トピックを管理します。" {
+		t.Fatal("not localized")
+	}
+	if got := Init(testCatalogs, env(map[string]string{"LANG": "en_US.UTF-8"})); got != "" || Lang() != "" {
+		t.Fatalf("Init(en) = %q, Lang() = %q", got, Lang())
+	}
+	if T("Manage topics.") != "Manage topics." {
+		t.Error("T should be identity after switching to English")
+	}
+	if out, _, _ := run(root, "topic", "create", "--help"); strings.Contains(out, "トピック") {
+		t.Errorf("hooks kept translating after Init(en):\n%s", out)
+	}
+	// The error prefix was translated in place when the tree was localized and stays; the messages
+	// flowing through the writer follow the new choice.
+	if _, errOut, _ := run(root, "tpic"); !strings.Contains(errOut, "unknown command \"tpic\" for \"demo\"") || strings.Contains(errOut, "不明") {
+		t.Errorf("error writer kept translating after Init(en): %q", errOut)
+	}
+	Reset()
+	if Lang() != "" || inited.Load() {
+		t.Error("Reset must clear the state")
+	}
+}
+
+func TestStrayTemplateBraceIsRejected(t *testing.T) {
+	reset()
+	dir := t.TempDir()
+	cat := `{"version":1,"language":"ja","messages":{"Flags:":"フラグ {{","Manage topics.":"トピックを管理します。"}}`
+	if err := os.WriteFile(filepath.Join(dir, "ja.json"), []byte(cat), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	root := withBuffers(newTestCLI())
+	Localize(root, os.DirFS(dir), env(map[string]string{"LANG": "ja_JP.UTF-8"}))
+	out, _, err := run(root, "topic", "--help")
+	if err != nil || !strings.Contains(out, "トピックを管理します。") {
+		t.Fatalf("help failed: %v\n%s", err, out)
+	}
+	if strings.Contains(out, "{{") || !strings.Contains(out, "Flags:") {
+		t.Errorf("a translation with an unterminated action must fall back to English:\n%s", out)
+	}
+}
+
+func TestDumpNeverOverwrites(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "dump.json")
+	if err := os.WriteFile(path, []byte("precious"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	localized(t, map[string]string{"LANG": "ja_JP.UTF-8", "LOCALIZER_DUMP": path})
+	if data, _ := os.ReadFile(path); string(data) != "precious" {
+		t.Errorf("existing file was overwritten: %q", data)
+	}
+}
+
+func TestTranslateModes(t *testing.T) {
+	reset()
+	Init(testCatalogs, env(map[string]string{"LOCALIZER_LANG": "ja"}))
+	if got := Translate("Manage topics.", ModeOutput); got != "トピックを管理します。" {
+		t.Errorf("output: %q", got)
+	}
+	wrapped := fmt.Errorf("failed to create topic %q: %w", "b", errors.New("topic already exists")).Error()
+	if got := Translate(wrapped, ModeError); got != `トピック "b" の作成に失敗しました: トピックはすでに存在します` {
+		t.Errorf("error: %q", got)
+	}
+	if got := Translate("Name: Manage topics.", ModeOutput); got != "Name: Manage topics." {
+		t.Errorf("output mode must not split labels: %q", got)
+	}
+	if got := Translate("Error: Manage topics.", ModeHelp); got != "エラー: トピックを管理します。" {
+		t.Errorf("help mode label split: %q", got)
+	}
+}
+
+func TestHelpersAreSafeForConcurrentUse(t *testing.T) {
+	reset()
+	Init(testCatalogs, env(map[string]string{"LOCALIZER_LANG": "ja"}))
+	var wg sync.WaitGroup
+	for g := 0; g < 8; g++ {
+		wg.Add(1)
+		go func(g int) {
+			defer wg.Done()
+			var buf bytes.Buffer
+			w := Writer(&buf)
+			for i := 0; i < 300; i++ {
+				if T("Manage topics.") != "トピックを管理します。" {
+					t.Error("T")
+				}
+				_ = Translate(fmt.Sprintf("Created topic %q.\n", fmt.Sprint(g, i)), ModeOutput)
+				_ = Error(fmt.Errorf("failed to create topic %q: %w", "x", errors.New("topic already exists")))
+				fmt.Fprint(w, "Manage topics.\n")
+			}
+		}(g)
+	}
+	wg.Wait()
 }
