@@ -88,7 +88,8 @@ The one line translates:
   Click bundled with Typer 0.26 and later;
 - the messages of the exceptions your commands raise (`ClickException`, `BadParameter`, your own
   subclasses), when they are displayed;
-- `prompt`/`confirm` texts.
+- `prompt`/`confirm` texts, and Click’s own prompt messages (`Repeat for confirmation`, `Error: invalid
+  input`, …) — with the copy of Click bundled with Typer 0.26 and later as well.
 
 Options: `env_var="YOURCLI_LANG"` adds an application-specific override variable; `language="de"` forces
 a language; `without_error_hook=True` and `without_prompt_hook=True` switch those hooks off.
@@ -210,7 +211,7 @@ To see which strings don’t go through Localizer yet, run your CLI with pseudo-
 <TabItem label="Python">
 - Rich measures display width correctly, so tables and panels line up in every language. Translations are
   usually longer than English; check narrow terminals.
-- Rich markup (`[bold]…[/]`) and Markdown in help are preserved, and a translation that drops or reorders a
-  markup tag is rejected.
+- Rich markup (`[bold]…[/]`) and Markdown in help are preserved; a translation that breaks Rich markup
+  falls back to English at render time.
 </TabItem>
 </Tabs>

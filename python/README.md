@@ -15,7 +15,8 @@ pip install localizer
 ```
 
 Python 3.10 or newer, no dependencies. Works with Click 8.1+, Typer 0.17+ (including Typer's
-bundled Click) and the standard library's argparse.
+bundled Click: help, errors, the prompt text and Click's own prompt messages) and the standard
+library's argparse.
 
 ## One line
 
@@ -52,9 +53,10 @@ tree in a factory, call `localize` where the finished app object is handed out �
 when help and errors are rendered, so commands registered later (plugins, lazy groups) are covered.
 
 What is translated: your help text and option descriptions, the framework's own messages (`Usage:`,
-`Show this message and exit.`, `Missing argument 'NAME'.`, `Aborted!`, prompts, argparse's `error:`
-lines — built-in catalogs for these ship in this package), the messages of exceptions your CLI
-raises, and whatever your program passes through the helpers below. Nothing else changes: command and
+`Show this message and exit.`, `Missing argument 'NAME'.`, `Aborted!`, `Repeat for confirmation` and
+Click's other prompt messages, argparse's `error:` lines — built-in catalogs for these ship in this
+package), the prompt text of `prompt`/`confirm`, the messages of exceptions your CLI raises, and
+whatever your program passes through the helpers below. Nothing else changes: command and
 option names, values, JSON/YAML output and logs stay as they are.
 
 ## Your own messages
