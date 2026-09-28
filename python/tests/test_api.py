@@ -80,6 +80,14 @@ def test_language_selection(locales, monkeypatch):
     assert localizer.init(locales, language="off") == ""
 
 
+def test_empty_language_means_detect(locales, monkeypatch):
+    monkeypatch.setenv("LOCALIZER_LANG", "ja")
+    assert localizer.init(locales, language="") == "ja"
+    assert localizer.init(locales, language=" ") == "ja"
+    monkeypatch.setenv("LOCALIZER_LANG", "off")
+    assert localizer.init(locales, language="") == ""
+
+
 def test_pseudo(locales, monkeypatch):
     monkeypatch.setenv("LOCALIZER_LANG", "qps")
     assert localizer.init(locales) == "qps"

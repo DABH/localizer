@@ -5,9 +5,11 @@ description: Common questions about Localizer.
 
 ## Does Localizer slow down my CLI?
 
-Not noticeably. When output is English, Localizer only reads a few environment variables. For other
-languages it decodes one catalog at startup, which takes a few milliseconds for a CLI with thousands of
-strings. Help is translated only when it’s shown.
+Not noticeably, but it isn’t free. Deciding the language reads a few environment variables (well under a
+millisecond) or, when none of them is set, the operating system’s language setting (about 9 ms on macOS).
+For a language other than English, one catalog is decoded at startup: a few milliseconds for a CLI with
+thousands of strings; the Python runtime also installs its hooks then (about 10 ms in all) and costs about
+25 ms to import (Python 3.13 on a recent laptop). Help is translated only when it’s shown.
 
 ## Does it make network calls or collect data?
 

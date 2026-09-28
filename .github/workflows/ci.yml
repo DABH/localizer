@@ -81,13 +81,16 @@ jobs:
 
   python:
     # The Python runtime, across the framework generations it hooks (Typer 0.17 uses real Click;
-    # Typer 0.26+ bundles its own copy) and the operating systems whose language settings it reads.
+    # Typer 0.26+ bundles its own copy), the Python versions that hand Click raw docstrings (3.10-3.12)
+    # and the operating systems whose language settings it reads.
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - { os: ubuntu-latest, python: "3.10", deps: "typer==0.17.3 click==8.1.8 rich==14.0.0" }
+          - { os: ubuntu-latest, python: "3.11", deps: "typer==0.26.8" }
+          - { os: ubuntu-latest, python: "3.12", deps: "click==8.1.7" }
           - { os: ubuntu-latest, python: "3.13", deps: "typer==0.27.2 click==8.5.0" }
           - { os: ubuntu-latest, python: "3.14", deps: "click==8.5.0" }
           - { os: ubuntu-latest, python: "3.14", deps: "" }
