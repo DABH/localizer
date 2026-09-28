@@ -36,28 +36,30 @@ func corpusSyntax(t *testing.T, s string) Syntax {
 }
 
 func TestConformancePlaceholders(t *testing.T) {
-	var file struct {
-		Syntax string
-		Cases  []struct {
-			Name, Source string
-			Translation  *string
-			Placeholders struct{ Fields, Backquoted, Tags []string }
-			Valid        *bool
+	for _, name := range []string{"placeholders.json", "placeholders_go.json"} {
+		var file struct {
+			Syntax string
+			Cases  []struct {
+				Name, Source string
+				Translation  *string
+				Placeholders struct{ Fields, Actions, Backquoted, Tags []string }
+				Valid        *bool
+			}
 		}
-	}
-	loadCorpus(t, "placeholders.json", &file)
-	syn := corpusSyntax(t, file.Syntax)
-	for _, c := range file.Cases {
-		got := ExtractSyntax(c.Source, syn)
-		want := Placeholders{Verbs: c.Placeholders.Fields, Backquoted: c.Placeholders.Backquoted, Tags: c.Placeholders.Tags}
-		if !got.Equal(want) {
-			t.Errorf("%s: placeholders of %q = %+v, want %+v", c.Name, c.Source, got, want)
-		}
-		if c.Translation != nil && c.Valid != nil {
-			tr := *c.Translation
-			valid := got.Equal(ExtractSyntax(tr, syn)) && !NewControlChars(c.Source, tr)
-			if valid != *c.Valid {
-				t.Errorf("%s: valid(%q -> %q) = %v, want %v (diff: %s)", c.Name, c.Source, tr, valid, *c.Valid, got.Diff(ExtractSyntax(tr, syn)))
+		loadCorpus(t, name, &file)
+		syn := corpusSyntax(t, file.Syntax)
+		for _, c := range file.Cases {
+			got := ExtractSyntax(c.Source, syn)
+			want := Placeholders{Verbs: c.Placeholders.Fields, Actions: c.Placeholders.Actions, Backquoted: c.Placeholders.Backquoted, Tags: c.Placeholders.Tags}
+			if !got.Equal(want) {
+				t.Errorf("%s: %s: placeholders of %q = %+v, want %+v", name, c.Name, c.Source, got, want)
+			}
+			if c.Translation != nil && c.Valid != nil {
+				tr := *c.Translation
+				valid := got.Equal(ExtractSyntax(tr, syn)) && !NewControlChars(c.Source, tr)
+				if valid != *c.Valid {
+					t.Errorf("%s: %s: valid(%q -> %q) = %v, want %v (diff: %s)", name, c.Name, c.Source, tr, valid, *c.Valid, got.Diff(ExtractSyntax(tr, syn)))
+				}
 			}
 		}
 	}
@@ -78,59 +80,62 @@ func TestConformanceRoundtrip(t *testing.T) {
 			Splices      *bool
 		}
 	}
-	loadCorpus(t, "roundtrip.json", &file)
-	syn := corpusSyntax(t, file.Syntax)
-	for _, c := range file.Cases {
-		p, ok := CompileSyntax(c.Format, syn)
-		if compiles := c.Compiles == nil || *c.Compiles; ok != compiles {
-			t.Errorf("%s: compile(%q) = %v, want %v", c.Name, c.Format, ok, compiles)
-			continue
-		}
-		if !ok || c.Input == nil {
-			continue
-		}
-		args, verbs, matched := p.Match(*c.Input)
-		if wantMatch := c.Match == nil || *c.Match; matched != wantMatch {
-			t.Errorf("%s: match(%q) = %v, want %v", c.Name, *c.Input, matched, wantMatch)
-			continue
-		}
-		if !matched {
-			continue
-		}
-		byName := map[string]int{}
-		for name, idx := range p.names {
-			byName[name] = idx
-		}
-		if syn == Go {
-			for _, tok := range p.toks {
-				if tok.IsVerb() {
-					byName[itoa(tok.Arg-1)] = tok.Arg
+	for _, name := range []string{"roundtrip.json", "roundtrip_go.json"} {
+		file.Cases = nil
+		loadCorpus(t, name, &file)
+		syn := corpusSyntax(t, file.Syntax)
+		for _, c := range file.Cases {
+			p, ok := CompileSyntax(c.Format, syn)
+			if compiles := c.Compiles == nil || *c.Compiles; ok != compiles {
+				t.Errorf("%s: compile(%q) = %v, want %v", c.Name, c.Format, ok, compiles)
+				continue
+			}
+			if !ok || c.Input == nil {
+				continue
+			}
+			args, verbs, matched := p.Match(*c.Input)
+			if wantMatch := c.Match == nil || *c.Match; matched != wantMatch {
+				t.Errorf("%s: match(%q) = %v, want %v", c.Name, *c.Input, matched, wantMatch)
+				continue
+			}
+			if !matched {
+				continue
+			}
+			byName := map[string]int{}
+			for name, idx := range p.names {
+				byName[name] = idx
+			}
+			if syn == Go {
+				for _, tok := range p.toks {
+					if tok.IsVerb() {
+						byName[itoa(tok.Arg-1)] = tok.Arg
+					}
 				}
 			}
-		}
-		for name, want := range c.Captures {
-			if got := args[byName[name]]; got != want {
-				t.Errorf("%s: capture %s = %q, want %q", c.Name, name, got, want)
+			for name, want := range c.Captures {
+				if got := args[byName[name]]; got != want {
+					t.Errorf("%s: capture %s = %q, want %q", c.Name, name, got, want)
+				}
 			}
-		}
-		if len(args) != len(c.Captures) {
-			t.Errorf("%s: %d captures, want %d", c.Name, len(args), len(c.Captures))
-		}
-		for name, want := range c.Classes {
-			if got := string(verbs[byName[name]]); got != want {
-				t.Errorf("%s: class of %s = %q, want %q", c.Name, name, got, want)
+			if len(args) != len(c.Captures) {
+				t.Errorf("%s: %d captures, want %d", c.Name, len(args), len(c.Captures))
 			}
-		}
-		if c.Translation == nil {
-			continue
-		}
-		out, spliced := p.Splice(*c.Translation, args, nil)
-		if wantSplice := c.Splices == nil || *c.Splices; spliced != wantSplice {
-			t.Errorf("%s: splice ok = %v, want %v", c.Name, spliced, wantSplice)
-			continue
-		}
-		if spliced && c.Spliced != nil && out != *c.Spliced {
-			t.Errorf("%s: spliced = %q, want %q", c.Name, out, *c.Spliced)
+			for name, want := range c.Classes {
+				if got := string(verbs[byName[name]]); got != want {
+					t.Errorf("%s: class of %s = %q, want %q", c.Name, name, got, want)
+				}
+			}
+			if c.Translation == nil {
+				continue
+			}
+			out, spliced := p.Splice(*c.Translation, args, nil)
+			if wantSplice := c.Splices == nil || *c.Splices; spliced != wantSplice {
+				t.Errorf("%s: splice ok = %v, want %v", c.Name, spliced, wantSplice)
+				continue
+			}
+			if spliced && c.Spliced != nil && out != *c.Spliced {
+				t.Errorf("%s: spliced = %q, want %q", c.Name, out, *c.Spliced)
+			}
 		}
 	}
 }

@@ -28,9 +28,11 @@ class Mode(enum.IntEnum):
 
 
 _MAX_DEPTH = 8
-_MAX_MEMO = 8192
+_MAX_MEMO_BYTES = 1 << 20  # total size of memoized inputs and outputs
+_MAX_MEMO_ENTRY = 1024  # longer strings are looked up every time rather than kept
 _IDX_LEN = 4
-_MAX_PREPASS = 64 << 10  # strings longer than this are not memoized or split
+_MAX_PREPASS = 64 << 10  # strings longer than this are not split
+_MAX_MATCH = 8 << 10  # longer strings never go through a template's regular expression
 
 _SENTENCE_BREAK = re.compile("[.!?。！？][\t\n\f\r ]*")
 
@@ -48,30 +50,65 @@ def _is_lower(c: str) -> bool:
     return unicodedata.category(c) == "Ll"
 
 
+def _ends_sentence(s: str) -> bool:
+    return s != "" and s[-1] in ".!?。！？"
+
+
+def _identifier_token(s: str) -> bool:
+    """A single token of letters, digits and ``-_./:``: a command name, a flag name, a path; never a message."""
+    return s != "" and all(c.isalnum() or c in "-_./:" for c in s)
+
+
+def _identifier_line(line: str) -> bool:
+    """An indented line holding a single identifier-like token, such as the command names Click lists
+    under "Did you mean this?"."""
+    return bool(line) and line[0] in "\t " and _identifier_token(line.strip(" \t\r\n"))
+
+
+def _trimmed_keys(c: Mapping[str, str]) -> dict[str, str]:
+    """Entries whose key carries surrounding whitespace, under the trimmed key. An exact trimmed key wins
+    over any copy; among several keys trimming to the same text the smallest original key wins."""
+    fixed: dict[str, str] = {}
+    origin: dict[str, str] = {}
+    for k, v in c.items():
+        _, core, _ = fmt.split_space(k)
+        if core == k or core in c:
+            continue
+        prev = origin.get(core)
+        if prev is not None and prev < k:
+            continue
+        origin[core] = k
+        fixed[core] = v
+    return fixed
+
+
 class Engine:
     """Translates strings into one language. Safe for concurrent use."""
 
     def __init__(self, lang: str, *catalogs: Mapping[str, str]) -> None:
-        """Later catalogs override earlier ones: pass the built-in catalog first, the app's last."""
+        """Later catalogs override earlier ones: pass the built-in catalog first, the app's last. The last
+        catalog is the application's: its templates win ties against the built-in ones, and a lone
+        identifier captured by a built-in template (a command or flag name) is never translated again."""
         self.lang = lang
         self._pseudo = False
         self.on_miss: Callable[[str, Mode], None] | None = None
         # Layers are consulted last to first. Keys are normally trimmed; untrimmed ones get a "fixed"
         # layer so the app's catalog never has to be copied.
         self._layers: list[Mapping[str, str]] = []
-        for c in catalogs:
+        self._app_from = 0
+        for i, c in enumerate(catalogs):
+            if i == len(catalogs) - 1:
+                self._app_from = len(self._layers)
             if not c:
                 continue
-            fixed: dict[str, str] = {}
-            for k, v in c.items():
-                _, core, _ = fmt.split_space(k)
-                if core != k:
-                    fixed[core] = v
             self._layers.append(c)
+            fixed = _trimmed_keys(c)
             if fixed:
                 self._layers.append(fixed)
         self._patterns: list[fmt.Pattern] | None = None
-        self._index: dict[str, list[int]] = {}
+        self._pat_layer: list[int] = []
+        self._multi: list[int] = []
+        self._index: dict[bytes, list[int]] = {}
         self._wild: list[int] = []
         self._valid: dict[str, bool] = {}
         self._memo: list[dict[str, str]] = [{}, {}, {}]
@@ -154,7 +191,7 @@ class Engine:
         if s == "" or mode not in (Mode.OUTPUT, Mode.HELP, Mode.ERROR):
             return s
         # Help strings are rendered once each; memoizing them would only cost memory.
-        cacheable = len(s) <= _MAX_PREPASS and mode != Mode.HELP
+        cacheable = len(s) <= _MAX_MEMO_ENTRY and mode != Mode.HELP
         if cacheable:
             v = self._memo[mode].get(s)
             if v is not None:
@@ -166,9 +203,9 @@ class Engine:
                 self.on_miss(s, mode)
         if cacheable:
             with self._lock:
-                if self._memo_size < _MAX_MEMO and s not in self._memo[mode]:
+                if self._memo_size < _MAX_MEMO_BYTES and s not in self._memo[mode]:
                     self._memo[mode][s] = out
-                    self._memo_size += 1
+                    self._memo_size += len(s) + len(out)
         return out
 
     def _translate(self, s: str, mode: Mode, depth: int) -> str:
@@ -182,8 +219,12 @@ class Engine:
             return lead + t + trail
         multiline = "\n" in core
         # Multi-line help is almost always composed (examples, code blocks): try its parts before any
-        # pattern, which saves regex work.
+        # single-line template, which saves regex work. Templates that span lines themselves are tried
+        # first, or their first line would match a one-line template and capture the rest as a value.
         if multiline and mode == Mode.HELP and len(core) <= _MAX_PREPASS:
+            t, ok = self._multiline_hit(core, mode, depth)
+            if ok:
+                return lead + t + trail
             t, ok = self._segments(core, mode, depth)
             if ok:
                 return lead + t + trail
@@ -216,6 +257,8 @@ class Engine:
         for i, p in enumerate(parts):
             if mode == Mode.HELP and p.strip(" \t\r\n").startswith("$ "):
                 continue  # a shell example
+            if mode == Mode.ERROR and _identifier_line(p):
+                continue  # a suggested command or flag name, never a message
             np = self._translate(p, mode, depth + 1)
             if np != p:
                 parts[i] = np
@@ -252,19 +295,22 @@ class Engine:
         with self._lock:
             if self._patterns is not None:
                 return self._patterns
-            keys: set[str] = set()
-            for layer in self._layers:
+            layer_of: dict[str, int] = {}  # template -> the highest layer holding it
+            for i, layer in enumerate(self._layers):
                 for k in layer:
                     if "%" in k or "{" in k:
                         _, core, _ = fmt.split_space(k)
-                        keys.add(core)
+                        layer_of[core] = i
             patterns: list[fmt.Pattern] = []
-            for k in sorted(keys, key=lambda x: x.encode("utf-8")):  # deterministic, as Go sorts
+            for k in sorted(layer_of, key=lambda x: x.encode("utf-8")):  # deterministic, as Go sorts
                 p = fmt.compile(k)
                 if p is None:
                     continue
                 i = len(patterns)
                 patterns.append(p)
+                self._pat_layer.append(layer_of[k])
+                if "\n" in k:
+                    self._multi.append(i)
                 pre = p.prefix
                 if pre == "":
                     self._wild.append(i)
@@ -276,27 +322,41 @@ class Engine:
 
     def _pattern_hit(self, core: str, mode: Mode, depth: int) -> tuple[str, bool]:
         patterns = self._patterns if self._patterns is not None else self._build_patterns()
-        if not patterns:
+        if not patterns or len(core) > _MAX_MATCH:
             return "", False
+        b = core.encode("utf-8")
+        candidates: list[int] = []
+        for n in range(1, min(_IDX_LEN, len(b)) + 1):
+            candidates.extend(self._index.get(b[:n], ()))
+        candidates.extend(self._wild)
+        return self._best_hit(candidates, core, mode, depth)
+
+    def _multiline_hit(self, core: str, mode: Mode, depth: int) -> tuple[str, bool]:
+        """Tries only the templates that span lines."""
+        if self._patterns is None:
+            self._build_patterns()
+        if len(core) > _MAX_MATCH:
+            return "", False
+        return self._best_hit(self._multi, core, mode, depth)
+
+    def _best_hit(self, candidates: list[int], core: str, mode: Mode, depth: int) -> tuple[str, bool]:
+        """The best reverse match among the candidate templates: more literal text wins; at equal
+        specificity the application's catalog beats the built-in one, then the first candidate (templates
+        are sorted). Text captures are translated again outside output mode, except a lone identifier
+        captured by a built-in template (a command or flag name, never a message)."""
+        patterns = self._patterns or []
         best: fmt.Pattern | None = None
+        best_layer = -1
         best_captures: dict[str, str] = {}
         best_classes: dict[str, str] = {}
-
-        def try_(i: int) -> None:
-            nonlocal best, best_captures, best_classes
+        for i in candidates:
             p = patterns[i]
-            if best is not None and p.specificity <= best.specificity:
-                return
+            layer = self._pat_layer[i]
+            if best is not None and (p.specificity < best.specificity or (p.specificity == best.specificity and layer <= best_layer)):
+                continue
             m = p.match(core)
             if m is not None and _plausible(p, m[0], m[1], mode):
-                best, best_captures, best_classes = p, m[0], m[1]
-
-        b = core.encode("utf-8")
-        for n in range(1, min(_IDX_LEN, len(b)) + 1):
-            for i in self._index.get(b[:n], ()):
-                try_(i)
-        for i in self._wild:
-            try_(i)
+                best, best_layer, best_captures, best_classes = p, layer, m[0], m[1]
         if best is None:
             return "", False
         if self._pseudo:
@@ -305,9 +365,10 @@ class Engine:
             translation, ok = self._exact_hit(best.format)
             if not ok:
                 return "", False
+        builtin = best_layer < self._app_from
 
         def transform(name: str, text: str) -> str:
-            if best_classes.get(name) == "v" and mode != Mode.OUTPUT:
+            if best_classes.get(name) == "v" and mode != Mode.OUTPUT and not (builtin and _identifier_token(text)):
                 return self._translate(text, mode, depth + 1)
             return text
 
@@ -318,16 +379,18 @@ class Engine:
 
 
 def _plausible(p: fmt.Pattern, captures: dict[str, str], classes: dict[str, str], mode: Mode) -> bool:
-    """Rejects matches that would splice untranslated prose into a translation: a capture stands for
-    a value and must not span sentences or lines, and a generic pattern (little literal text) must
-    not capture a lowercase phrase. Error mode exempts text captures, which legitimately carry
-    wrapped errors."""
+    """Rejects matches that would splice untranslated prose into a translation: a generic template
+    (little literal text) must not capture a lowercase phrase, and outside error messages a capture must
+    not span sentences or lines, nor, in help text, end a sentence. Captures in error messages may span
+    lines and sentences: they legitimately carry wrapped errors and server text."""
     generic = p.letters < 10
-    for name, c in captures.items():
-        if mode == Mode.ERROR and classes.get(name) == "v":
-            continue
-        if mode != Mode.ERROR and ("\n" in c or _sentence_break(c)):
+    for c in captures.values():
+        if generic and " " in c and c and _is_lower(c[0]):
             return False
-        if generic and mode != Mode.ERROR and " " in c and c and _is_lower(c[0]):
+        if mode == Mode.ERROR:
+            continue
+        if "\n" in c or _sentence_break(c):
+            return False
+        if mode == Mode.HELP and " " in c and _ends_sentence(c):
             return False
     return True

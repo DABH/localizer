@@ -12,7 +12,8 @@ import (
 	"github.com/DABH/localizer/msgfmt"
 )
 
-// TestConformanceEngine runs testdata/conformance/engine.json, which the Python runtime runs too.
+// TestConformanceEngine runs testdata/conformance/engine.json, which the Python runtime runs too (its
+// Python-syntax groups).
 func TestConformanceEngine(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join("..", "testdata", "conformance", "engine.json"))
 	if err != nil {
@@ -22,6 +23,7 @@ func TestConformanceEngine(t *testing.T) {
 		Groups []struct {
 			Name, Syntax string
 			Pseudo       bool
+			Builtin      map[string]string
 			Catalog      map[string]string
 			Cases        []struct{ Input, Mode, Want string }
 		}
@@ -36,9 +38,12 @@ func TestConformanceEngine(t *testing.T) {
 			syn = msgfmt.Python
 		}
 		var e *Engine
-		if g.Pseudo {
+		switch {
+		case g.Pseudo:
 			e = NewPseudoSyntax(syn, g.Catalog)
-		} else {
+		case g.Builtin != nil:
+			e = NewSyntax("ja", syn, g.Builtin, g.Catalog)
+		default:
 			e = NewSyntax("ja", syn, g.Catalog)
 		}
 		for _, c := range g.Cases {

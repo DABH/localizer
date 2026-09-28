@@ -182,8 +182,9 @@ def _windows_languages() -> list[str]:
 _ALIASES = {"iw": "he", "in": "id", "ji": "yi", "jw": "jv", "mo": "ro", "tl": "fil", "no": "nb"}
 # A tag that means a language and script.
 _SCRIPT_ALIASES = {"sh": ("sr", "Latn")}
-# Languages close enough that a catalog in one serves readers of the other.
-_CLOSE = {"nn": "nb"}
+# Languages close enough that a catalog in one serves readers of the other, ranked below any catalog
+# in the reader's own language. The macro tag "no" (an alias of "nb") takes no part in this.
+_CLOSE = {"nn": ("nb",), "nb": ("nn",)}
 # The script a language is written in unless a tag says otherwise (only languages where an explicit
 # script in a preference must be checked against it).
 _LIKELY_SCRIPT = {
@@ -210,6 +211,7 @@ class _Tag:
     lang: str
     script: str  # "" when unspecified
     region: str  # "" when unspecified
+    close_ok: bool = True  # may match a close language (not for the macro tag "no")
 
 
 def _parse_tag(s: str) -> _Tag | None:
@@ -227,10 +229,11 @@ def _parse_tag(s: str) -> _Tag | None:
     if lang in _SCRIPT_ALIASES:
         lang, alias_script = _SCRIPT_ALIASES[lang]
         script = script or alias_script
+    close_ok = lang != "no"
     lang = _ALIASES.get(lang, lang)
     if not script:
         script = _likely_script(lang, region)
-    return _Tag(lang, script, region)
+    return _Tag(lang, script, region, close_ok)
 
 
 def _likely_script(lang: str, region: str) -> str:
@@ -245,15 +248,17 @@ def _likely_script(lang: str, region: str) -> str:
     return _LIKELY_SCRIPT.get(lang, "")
 
 
-_NONE, _LANGUAGE, _REGION_GROUP, _EXACT = 0, 1, 2, 3
+_NONE, _CLOSE_LANGUAGE, _LANGUAGE, _REGION_GROUP, _EXACT = 0, 1, 2, 3, 4
 
 
 def _score(pref: _Tag, cand: _Tag) -> int:
     lang = pref.lang
     if cand.lang != lang:
-        if _CLOSE.get(lang) != cand.lang:
+        if not (pref.close_ok and cand.close_ok) or cand.lang not in _CLOSE.get(lang, ()):
             return _NONE
-        lang = cand.lang
+        if pref.script and cand.script and pref.script != cand.script:
+            return _NONE
+        return _CLOSE_LANGUAGE  # below every catalog in the reader's own language
     if pref.script and cand.script and pref.script != cand.script:
         return _NONE
     if pref.region == cand.region or (not cand.region and not pref.region):
@@ -287,6 +292,6 @@ def match(prefs: Sequence[str], available: Sequence[str]) -> str:
             score = _score(pref, cand)
             if score > best_score:
                 best_name, best_score = name, score
-        if best_score >= _LANGUAGE:
+        if best_score >= _CLOSE_LANGUAGE:
             return best_name
     return ""
