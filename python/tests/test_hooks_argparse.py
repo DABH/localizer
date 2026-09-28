@@ -4,6 +4,8 @@
 import argparse
 import io
 import json
+import threading
+import time
 from contextlib import redirect_stderr
 
 import pytest
@@ -95,3 +97,38 @@ def test_dump(locales, tmp_path, monkeypatch):
     assert kinds[("long", "taskctl", "")] is True
     assert kinds[("flag", "taskctl add", "--priority")] is False
     assert kinds[("flag", "taskctl add", "title")] is True
+
+
+def test_dump_again_after_uninstall(locales, tmp_path, monkeypatch):
+    for name in ("first", "second"):
+        dump = tmp_path / f"{name}.json"
+        monkeypatch.setenv("LOCALIZER_DUMP", str(dump))
+        localizer.localize(make_parser(), locales, language="ja")
+        assert json.loads(dump.read_text(encoding="utf-8"))["language"] == "ja", name
+        localizer.uninstall()
+
+
+def test_concurrent_renders_leave_the_parser_english(locales, monkeypatch):
+    parser = make_parser()
+    english = parser.format_help()
+    localizer.localize(parser, locales, language="ja")
+    engine = localizer._api.state().engine
+    real = engine.translate
+    monkeypatch.setattr(engine, "translate", lambda s, m: (time.sleep(0.0005), real(s, m))[1])  # lets the threads interleave
+    outputs = []
+    barrier = threading.Barrier(2)
+
+    def render():
+        barrier.wait()
+        for _ in range(5):
+            outputs.append(parser.format_help())
+
+    threads = [threading.Thread(target=render) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(outputs) == 10 and all("タスクを管理します。" in o for o in outputs)
+    assert parser.description == "Manage tasks."
+    localizer.uninstall()
+    assert parser.format_help() == english

@@ -1,7 +1,10 @@
 # Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
 # SPDX-License-Identifier: NCSA
 
+import io
 import json
+import threading
+import time
 
 import pytest
 
@@ -9,6 +12,7 @@ click = pytest.importorskip("click")
 from click.testing import CliRunner  # noqa: E402
 
 import localizer  # noqa: E402
+from localizer import _hooks_click  # noqa: E402
 
 JA = {
     "Usage:": "使い方:",
@@ -16,6 +20,7 @@ JA = {
     "Commands": "コマンド",
     "Show this message and exit.": "このメッセージを表示して終了します。",
     "Manage tasks.": "タスクを管理します。",
+    "Manage tasks.\n\nUse it to add, list and complete tasks.": "タスクを管理します。\n\n追加、一覧、完了に使います。",
     "Add a task.\n\nThe title is required.": "タスクを追加します。\n\n件名は必須です。",
     "Name of the thing.": "対象の名前。",
     "Priority of the task: low, normal or high.": "タスクの優先度: low、normal、high。",
@@ -120,3 +125,69 @@ def test_dump(locales, tmp_path, monkeypatch):
     assert entries[("long", "cli", "")]["translated"] is True
     assert entries[("flag", "cli add", "priority")]["text"] == "Priority of the task: low, normal or high."
     assert entries[("long", "cli done", "")] if ("long", "cli done", "") in entries else True
+
+
+def test_docstring_help_is_translated(locales, tmp_path, monkeypatch):
+    """Python < 3.13 hands Click the raw, indented docstring; the catalog is keyed by its cleaned text."""
+
+    @click.group()
+    def cli():
+        """Manage tasks.
+
+        Use it to add, list and complete tasks.
+        """
+
+    @cli.command()
+    def add():
+        """Add a task.
+
+        The title is required.
+        """
+
+    dump = tmp_path / "dump.json"
+    monkeypatch.setenv("LOCALIZER_DUMP", str(dump))
+    localizer.localize(cli, locales, language="ja")
+    out = CliRunner().invoke(cli, ["--help"]).output
+    assert "タスクを管理します。" in out and "追加、一覧、完了に使います。" in out
+    assert "add  タスクを追加します。" in out
+    sub = CliRunner().invoke(cli, ["add", "--help"]).output
+    assert "タスクを追加します。" in sub and "件名は必須です。" in sub
+    assert cli.help.startswith("Manage tasks.")  # the original is not modified
+    entries = {(e["kind"], e["command"]): e for e in json.loads(dump.read_text(encoding="utf-8"))["entries"]}
+    assert entries[("long", "cli add")] == {"kind": "long", "command": "cli add", "text": "Add a task.\n\nThe title is required.", "translated": True}
+
+
+def test_failed_translated_render_prints_help_once(locales, monkeypatch):
+    cli = make_cli()
+    localizer.localize(cli, locales, language="ja")
+    # A copy whose help is not a string makes Click fail after it wrote the usage line.
+    monkeypatch.setattr(_hooks_click, "_help", lambda s: 0 if s == "Manage tasks." else s)
+    out = CliRunner().invoke(cli, ["--help"]).output
+    assert out.count("使い方:") == 1 and "Manage tasks." in out and "タスクを管理します。" not in out
+
+
+def test_error_display_from_threads_and_uninstall(locales, monkeypatch):
+    cli = make_cli()
+    orig_echo = click.exceptions.echo
+    localizer.localize(cli, locales, language="ja")
+    engine = localizer._api.state().engine
+    real = engine.translate
+    monkeypatch.setattr(engine, "translate", lambda s, m: (time.sleep(0.001), real(s, m))[1])  # lets the threads interleave
+    outputs = []
+    barrier = threading.Barrier(2)
+
+    def show():
+        buf = io.StringIO()
+        barrier.wait()
+        for _ in range(10):
+            click.exceptions.UsageError("Missing argument").show(file=buf)
+        outputs.append(buf.getvalue())
+
+    threads = [threading.Thread(target=show) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert [o.count("エラー: 引数がありません") for o in outputs] == [10, 10]
+    localizer.uninstall()
+    assert click.exceptions.echo is orig_echo
