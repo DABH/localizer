@@ -17,13 +17,30 @@ import contextlib
 import copy
 import gettext
 import importlib
+import inspect
 import threading
 from typing import Any
 
 from . import _api, _hooks
 from ._engine import Mode
 
-_render = threading.local()
+_render = threading.local()  # per-thread flags: a help render, a prompt or an error's show() in progress
+
+
+@contextlib.contextmanager
+def _inside(flag: str):
+    """Marks the calling thread as inside a hooked call (a prompt, an error's ``show()``), so that the
+    ``echo`` of the module it prints through translates that call's output and nothing else."""
+    depth = getattr(_render, flag, 0)
+    setattr(_render, flag, depth + 1)
+    try:
+        yield
+    finally:
+        setattr(_render, flag, depth)
+
+
+def _is_inside(flag: str) -> bool:
+    return getattr(_render, flag, 0) > 0
 
 
 def _module(name: str):
@@ -94,6 +111,11 @@ def view(cmd: Any, cache: dict[int, Any] | None = None) -> Any:
         val = getattr(cmd, attr, None)
         if isinstance(val, str) and val:
             try:
+                if attr != "rich_help_panel" and "\n" in val:
+                    # Click cleans a docstring's indentation only when it renders, and Python < 3.13
+                    # keeps it in ``help``; catalogs are keyed by the cleaned text (Click cleans the
+                    # translated copy again, which changes nothing).
+                    val = inspect.cleandoc(val)
                 setattr(v, attr, _help(val))
             except Exception:
                 pass
@@ -136,10 +158,20 @@ def _wrap_format_help(command_cls: type) -> None:
                 _dump.maybe_dump_click(ctx)
             except Exception:
                 _api.debug_exc("dump")
-            return orig(view(self), ctx, formatter)
-        except Exception:
-            _api.debug_exc("format_help")
-            return orig(self, ctx, formatter)
+            # Whatever the translated copy wrote before failing is discarded, so the fallback never
+            # prints the help twice.
+            buffer = getattr(formatter, "buffer", None)
+            mark = len(buffer) if isinstance(buffer, list) else None
+            indent = getattr(formatter, "current_indent", None)
+            try:
+                return orig(view(self), ctx, formatter)
+            except Exception:
+                _api.debug_exc("format_help")
+                if mark is not None:
+                    del buffer[mark:]
+                if indent is not None:
+                    formatter.current_indent = indent
+                return orig(self, ctx, formatter)
         finally:
             _render.active = False
 
@@ -216,7 +248,30 @@ def translated_message(exc: Any):
             pass
 
 
-def _wrap_show(exc_cls: type, exceptions_mod) -> None:
+def _wrap_echo(mod, flag: str, where: str, *, lines_only: bool) -> bool:
+    """Patches ``mod.echo`` once (the registry removes it again): while the calling thread is inside
+    the call ``flag`` marks, the messages it prints are translated as error text; anything the module
+    prints outside such a call passes through. With ``lines_only`` a partial line (``nl=False``, the
+    prompt itself, which was translated already) is left alone."""
+    echo = getattr(mod, "echo", None)
+    if echo is None:
+        return False
+
+    def translating_echo(message=None, *args, **kwargs):
+        if _is_inside(flag) and isinstance(message, str) and (not lines_only or kwargs.get("nl", True)):
+            eng = _engine()
+            if eng is not None:
+                try:
+                    message = eng.translate(message, Mode.ERROR)
+                except Exception:
+                    _api.debug_exc(where)
+        return echo(message, *args, **kwargs)
+
+    translating_echo.__wrapped__ = echo
+    return _hooks.patch(mod, "echo", translating_echo)
+
+
+def _wrap_show(exc_cls: type, echo_hooked: bool) -> None:
     orig = exc_cls.__dict__.get("show")
     if orig is None:
         return
@@ -225,46 +280,52 @@ def _wrap_show(exc_cls: type, exceptions_mod) -> None:
         eng = _engine()
         if eng is None:
             return orig(self, file)
-        # Everything show() prints (the usage line, the "Try ... for help." hint, "Error: ...") goes
-        # through the module's echo; translating there covers Click's gettext strings and the copy of
-        # Click bundled with Typer, which hard-codes them.
-        echo = getattr(exceptions_mod, "echo", None)
-        if echo is None:
+        if not echo_hooked:
             with translated_message(self):
                 return orig(self, file)
-
-        def translating_echo(message=None, *args, **kwargs):
-            if isinstance(message, str):
-                message = eng.translate(message, Mode.ERROR)
-            return echo(message, *args, **kwargs)
-
-        exceptions_mod.echo = translating_echo
-        try:
+        # Everything show() prints (the usage line, the "Try ... for help." hint, "Error: ...") goes
+        # through the module's echo, hooked once at install time; translating there covers Click's
+        # gettext strings and the copy of Click bundled with Typer, which hard-codes them.
+        with _inside("in_show"):
             return orig(self, file)
-        finally:
-            exceptions_mod.echo = echo
 
     _hooks.patch(exc_cls, "show", show)
 
 
 # -- prompts -----------------------------------------------------------------------------------
 
+_REPEAT = "Repeat for confirmation"  # Click's default confirmation prompt (confirmation_prompt=True)
+
 
 def _wrap_prompts(prefix: str, modules: list) -> None:
     termui = _module(prefix + ".termui")
     if termui is None:
         return
+    # Click's own prompt messages ("Repeat for confirmation", "Error: The two entered values do not
+    # match.", "Error: invalid input") are printed through termui's echo; hooking it covers the copy
+    # of Click bundled with Typer, which has no gettext to redirect.
+    _wrap_echo(termui, "in_prompt", "prompt echo", lines_only=True)
     for name in ("prompt", "confirm"):
         orig = getattr(termui, name, None)
         if orig is None:
             continue
 
-        def make(orig=orig):
+        def make(name=name, orig=orig):
             def wrapper(text, *args, **kwargs):
                 eng = _engine()
-                if eng is not None and isinstance(text, str):
-                    text = eng.translate(text, Mode.OUTPUT)
-                return orig(text, *args, **kwargs)
+                if eng is None:
+                    return orig(text, *args, **kwargs)
+                try:
+                    if isinstance(text, str):
+                        text = eng.translate(text, Mode.OUTPUT)
+                    if name == "prompt" and kwargs.get("confirmation_prompt") is True:
+                        repeat = _lookup(_REPEAT)
+                        if repeat != _REPEAT:
+                            kwargs = dict(kwargs, confirmation_prompt=repeat)
+                except Exception:
+                    _api.debug_exc(name)
+                with _inside("in_prompt"):
+                    return orig(text, *args, **kwargs)
 
             wrapper.__wrapped__ = orig
             return wrapper
@@ -304,10 +365,11 @@ def install(prefix: str, *, error_hook: bool, prompt_hook: bool) -> None:
     for mod in modules:
         _patch_gettext(mod)
     if error_hook:
+        echo_hooked = _wrap_echo(exceptions, "in_show", "error echo", lines_only=False)
         for name in ("ClickException", "UsageError"):
             cls = getattr(exceptions, name, None)
             if isinstance(cls, type):
-                _wrap_show(cls, exceptions)
+                _wrap_show(cls, echo_hooked)
     if prompt_hook:
         typer = _module("typer") if prefix != "click" or "typer" in __import__("sys").modules else None
         _wrap_prompts(prefix, modules + ([typer] if typer is not None else []))

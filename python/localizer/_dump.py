@@ -6,12 +6,18 @@ per process as JSON in the same shape the Go runtime writes (for coverage report
 
 from __future__ import annotations
 
+import inspect
 import json
 
 from . import _api
 from ._engine import Mode
 
 _done: set[str] = set()
+
+
+def reset() -> None:
+    """Forgets which dumps were written, so the next localize() dumps again (uninstall)."""
+    _done.clear()
 
 
 def _write(entries: list[dict]) -> None:
@@ -51,8 +57,8 @@ def maybe_dump_click(ctx) -> None:
 def _walk_click(cmd, ctx, entries: list[dict]) -> None:
     path = ctx.command_path
     _entry(entries, "short", path, getattr(cmd, "short_help", None) or _first_paragraph(getattr(cmd, "help", None)))
-    _entry(entries, "long", path, getattr(cmd, "help", None))
-    _entry(entries, "epilog", path, getattr(cmd, "epilog", None))
+    _entry(entries, "long", path, _clean(getattr(cmd, "help", None)))
+    _entry(entries, "epilog", path, _clean(getattr(cmd, "epilog", None)))
     if isinstance(getattr(cmd, "deprecated", None), str):
         _entry(entries, "deprecated", path, cmd.deprecated)
     if isinstance(getattr(cmd, "rich_help_panel", None), str):
@@ -86,6 +92,14 @@ def _first_paragraph(text):
     if not isinstance(text, str):
         return None
     return text.strip().split("\n\n", 1)[0]
+
+
+def _clean(text):
+    """Multi-line help as Click renders it and as catalogs key it: Python < 3.13 keeps a docstring's
+    indentation in ``help``."""
+    if isinstance(text, str) and "\n" in text:
+        return inspect.cleandoc(text)
+    return text
 
 
 def maybe_dump_argparse(parser) -> None:

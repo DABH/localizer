@@ -8,9 +8,15 @@ from __future__ import annotations
 
 import contextlib
 import gettext
+import threading
 
 from . import _api, _hooks
 from ._engine import Mode
+
+# A render translates the real parser's texts and restores them afterwards, so two renders must not
+# overlap: the second would save the first one's translations as the originals. Reentrant for a
+# formatter that renders the usage while the help renders.
+_lock = threading.RLock()
 
 
 def _engine():
@@ -83,7 +89,7 @@ def install(app, *, error_hook: bool) -> None:
                 if eng is None:
                     return orig(self)
                 try:
-                    with translated_parser(self, eng):
+                    with _lock, translated_parser(self, eng):
                         return orig(self)
                 except Exception:
                     _api.debug_exc("argparse help")
