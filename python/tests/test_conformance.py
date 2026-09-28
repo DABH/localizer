@@ -4,13 +4,16 @@
 """Runs the vectors shared with the Go implementation (testdata/conformance)."""
 
 import pytest
+from conftest import CONFORMANCE
 
 from localizer import _format as fmt
+
+if not CONFORMANCE.is_dir():  # an sdist carries the tests but not the repository's corpus
+    pytest.skip("conformance corpus not present (run from a repository checkout)", allow_module_level=True)
 
 
 def _cases(name):
     import json
-    from conftest import CONFORMANCE
 
     with open(CONFORMANCE / name, encoding="utf-8") as f:
         data = json.load(f)
@@ -60,7 +63,6 @@ def test_pseudo(case):
 
 def _engine_cases():
     import json
-    from conftest import CONFORMANCE
 
     from localizer._engine import Engine, Mode
 

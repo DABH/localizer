@@ -10,7 +10,13 @@ from conftest import CONFORMANCE
 from localizer import _locale as loc
 
 
+PLIST = CONFORMANCE.parent.parent / "internal" / "locale" / "testdata" / "GlobalPreferences.plist"
+NO_CORPUS = "conformance corpus not present (run from a repository checkout)"  # an sdist carries the tests only
+
+
 def _golden():
+    if not CONFORMANCE.is_dir():
+        return [pytest.param([], [], "", marks=pytest.mark.skip(reason=NO_CORPUS))]
     with open(CONFORMANCE / "locale_match.json", encoding="utf-8") as f:
         data = json.load(f)
     return [
@@ -85,5 +91,6 @@ def test_apple_languages():
     assert loc.apple_languages(b"not a plist") == []
     assert loc.apple_languages(plistlib.dumps({"AppleLocale": "ja_JP"}, fmt=plistlib.FMT_BINARY)) == []
     # The Go implementation's fixture reads the same way.
-    fixture = CONFORMANCE.parent.parent / "internal" / "locale" / "testdata" / "GlobalPreferences.plist"
-    assert loc.apple_languages(fixture.read_bytes()) == ["ja-JP", "zh-Hans-CN", "en-US", "Français-ünicode"]
+    if not PLIST.is_file():
+        pytest.skip(NO_CORPUS)
+    assert loc.apple_languages(PLIST.read_bytes()) == ["ja-JP", "zh-Hans-CN", "en-US", "Français-ünicode"]
