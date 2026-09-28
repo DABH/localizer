@@ -46,7 +46,7 @@ During the preview, the service accepts workflows from accounts that have access
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `github-token` | `${{ github.token }}` | Token that pushes the translations branch and opens the pull request. |
+| `github-token` | `${{ github.token }}` | Token that pushes the translations branch and opens the pull request. Both `git push` and `gh` use it, whatever credentials `actions/checkout` kept. |
 | `branch` | `localizer-translations` | Branch for the translations pull request. |
 | `timeout-minutes` | `45` | How long to wait for translations. |
 | `api-url` | the Localizer service | Localizer API base URL. |
@@ -68,5 +68,8 @@ During the preview, the service accepts workflows from accounts that have access
   pull requests from forks, can’t spend your quota.
 - Localizer serves public repositories only.
 - The Action writes only the files the service returns: catalogs, plus the setup files on the first run. It
-  refuses absolute paths, `..`, and anything under `.git/` or `.github/`.
+  writes only relative paths to `*.json`, `*.go` and `*.py` files, `pyproject.toml`, and `.localizer.yml` in
+  the repository root, and refuses everything else before writing anything: absolute paths, `.` or `..`
+  components, backslashes, colons or control characters, and any path with a `.git` or `.github` component
+  in any letter case.
 - Pin the Action to a release tag or, for the strongest guarantee, to a full commit SHA.
