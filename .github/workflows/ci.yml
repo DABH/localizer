@@ -3,6 +3,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: '23 5 * * 1' # Mondays: the weekly fuzz job (the other jobs run too, and catch toolchain drift)
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,18 +17,64 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: stable
       - run: go vet ./...
       - run: go test -race ./...
+      # A short run of every fuzz target (the fuzz job below runs them for longer, weekly). One step per
+      # target, each run even after an earlier one failed, so a crasher is reported under its target's name.
+      - name: FuzzReverseMatch
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: go test ./msgfmt/ -run '^$' -fuzz '^FuzzReverseMatch$' -fuzztime=10s
+      - name: FuzzAppleLanguages
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: go test ./internal/locale/ -run '^$' -fuzz '^FuzzAppleLanguages$' -fuzztime=10s
+      - name: FuzzParseFast
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: go test ./catalog/ -run '^$' -fuzz '^FuzzParseFast$' -fuzztime=10s
+
+  fuzz:
+    # Every fuzz target for a minute, weekly and on demand. One step per target, each run even after an
+    # earlier one found a crasher, so the failing step names the target; the crashers go test writes to
+    # the package's testdata/fuzz/ are kept as an artifact.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+      - name: Every fuzz target has a step here
+        run: |
+          diff <(grep -rho '^func Fuzz[A-Za-z0-9_]*' --include='*_test.go' . | sed 's/^func //' | sort) \
+               <(printf '%s\n' FuzzAppleLanguages FuzzParseFast FuzzReverseMatch)
+      - name: FuzzReverseMatch
+        if: ${{ !cancelled() }}
+        run: go test ./msgfmt/ -run '^$' -fuzz '^FuzzReverseMatch$' -fuzztime=60s
+      - name: FuzzAppleLanguages
+        if: ${{ !cancelled() }}
+        run: go test ./internal/locale/ -run '^$' -fuzz '^FuzzAppleLanguages$' -fuzztime=60s
+      - name: FuzzParseFast
+        if: ${{ !cancelled() }}
+        run: go test ./catalog/ -run '^$' -fuzz '^FuzzParseFast$' -fuzztime=60s
+      - name: Keep the crashers
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fuzz-crashers
+          path: '**/testdata/fuzz/'
+          if-no-files-found: ignore
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: stable
       - run: make fmt-check vet
@@ -45,8 +94,8 @@ jobs:
           - { os: macos-latest, python: "3.13", deps: "typer==0.27.2" }
           - { os: windows-latest, python: "3.13", deps: "typer==0.17.3 click==8.1.8 rich==14.0.0" }
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
       - name: Install
         shell: bash
         run: |
@@ -59,8 +108,8 @@ jobs:
   cla-script:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
       - run: node --test .github/cla/cla.test.js
@@ -69,8 +118,8 @@ jobs:
     # The runtime requires cobra >= v1.8 but must keep working with the newest release.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: stable
       - run: |
