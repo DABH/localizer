@@ -34,7 +34,7 @@ During the preview, the service accepts workflows from accounts that have access
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v7
-         - uses: DABH/localizer/action@v0.4.1
+         - uses: DABH/localizer/action@v0.5.0
    ```
 
 2. Turn on **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and
