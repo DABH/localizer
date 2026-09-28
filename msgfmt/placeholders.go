@@ -12,9 +12,9 @@ import (
 // Placeholders is the set of things a translation must carry over unchanged from its source string.
 type Placeholders struct {
 	Verbs      []string // "argIndex:flags width .prec verb", sorted and de-duplicated
-	Actions    []string // text/template actions, sorted and de-duplicated
-	Backquoted []string // `...` spans, sorted, with duplicates (pflag uses the first pair as a placeholder)
-	Tags       []string // Python: Rich markup tags and "\[" escapes, sorted, with duplicates
+	Actions    []string // text/template actions, sorted and de-duplicated; "{{" stands for an unterminated action
+	Backquoted []string // `...` spans: the first one first (pflag uses it as the flag's value name), then the rest sorted
+	Tags       []string // Python: Rich markup tags and "\[" escapes, sorted, with duplicates; "[/?]" stands for unbalanced markup
 }
 
 // Extract returns the placeholders in a Go string. Verbs are only considered when s parses as a format
@@ -38,8 +38,13 @@ func Extract(s string) Placeholders {
 		for a := range set {
 			p.Actions = append(p.Actions, a)
 		}
-		sort.Strings(p.Actions)
 	}
+	if strings.Contains(masked, "{{") {
+		// An unterminated action would make text/template refuse the whole template: a translation may
+		// only contain one if the source does.
+		p.Actions = append(p.Actions, "{{")
+	}
+	sort.Strings(p.Actions)
 	if strings.Contains(masked, "%") {
 		if toks, ok := Parse(masked); ok {
 			set := map[string]bool{}
@@ -56,8 +61,7 @@ func Extract(s string) Placeholders {
 			sort.Strings(p.Verbs)
 		}
 	}
-	p.Backquoted = backquoted(masked)
-	sort.Strings(p.Backquoted)
+	p.Backquoted = orderedSpans(backquoted(masked))
 	return p
 }
 
@@ -96,8 +100,8 @@ func equalStrings(a, b []string) bool {
 	return true
 }
 
-// backquoted returns the `...` spans of s. An unpaired trailing backquote is reported as a lone "`" so
-// that adding or removing a stray backquote is still detected.
+// backquoted returns the `...` spans of s in order. An unpaired trailing backquote is reported as a lone
+// "`" so that adding or removing a stray backquote is still detected.
 func backquoted(s string) []string {
 	var out []string
 	for {
@@ -114,15 +118,41 @@ func backquoted(s string) []string {
 	}
 }
 
-// NewControlChars reports control characters (other than \n, \t, \r) or ANSI escape sequences present in
-// dst but not in src. Translations must never smuggle terminal escapes into a CLI's output.
+// orderedSpans keeps the first span in place and sorts the rest: the first backquoted span of a flag
+// description is what pflag shows as the flag's value name, so a translation must keep it first, while
+// the others may move with the sentence.
+func orderedSpans(spans []string) []string {
+	if len(spans) > 1 {
+		sort.Strings(spans[1:])
+	}
+	return spans
+}
+
+// NewControlChars reports control characters (other than \n and \t), a carriage return the source
+// doesn't have, terminal escape sequences, bidirectional embeddings, overrides and isolates, line and
+// paragraph separators, a byte order mark or tag characters present in dst but not in src. Translations
+// must never smuggle terminal escapes into a CLI's output, nor reorder or hide what the user sees.
 func NewControlChars(src, dst string) bool {
 	for _, r := range dst {
-		if (r < 0x20 && r != '\n' && r != '\t' && r != '\r') || r == 0x7f || (r >= 0x80 && r < 0xa0) || r == '‮' || r == '‭' {
-			if !strings.ContainsRune(src, r) {
-				return true
-			}
+		if controlRune(r) && !strings.ContainsRune(src, r) {
+			return true
 		}
+	}
+	return false
+}
+
+func controlRune(r rune) bool {
+	switch {
+	case r < 0x20:
+		return r != '\n' && r != '\t'
+	case r == 0x7f, r >= 0x80 && r < 0xa0:
+		return true
+	case r >= 0x202a && r <= 0x202e, r >= 0x2066 && r <= 0x2069: // bidi embeddings, overrides, isolates
+		return true
+	case r == 0x2028, r == 0x2029, r == 0xfeff:
+		return true
+	case r >= 0xe0000 && r <= 0xe007f: // tag characters
+		return true
 	}
 	return false
 }

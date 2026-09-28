@@ -381,6 +381,25 @@
         },
         {
           "prefs": [
+            "nn-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nb-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
             "not a tag"
           ],
           "want": ""
@@ -797,6 +816,25 @@
         },
         {
           "prefs": [
+            "nn-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nb-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
             "not a tag"
           ],
           "want": ""
@@ -1208,6 +1246,25 @@
         {
           "prefs": [
             "nn"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nn-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nb-NO"
           ],
           "want": ""
         },
@@ -1630,6 +1687,25 @@
         },
         {
           "prefs": [
+            "nn-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nb-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
             "not a tag"
           ],
           "want": ""
@@ -2042,6 +2118,25 @@
         {
           "prefs": [
             "nn"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nn-NO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nb-NO"
           ],
           "want": ""
         },
@@ -2461,6 +2556,1332 @@
             "nn"
           ],
           "want": "nb"
+        },
+        {
+          "prefs": [
+            "nn-NO"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "nb-NO"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "not a tag"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            ""
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "C"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "POSIX"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja_JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "JA-jp"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-hant-tw"
+          ],
+          "want": ""
+        }
+      ]
+    },
+    {
+      "available": [
+        "nb",
+        "nn-NO"
+      ],
+      "cases": [
+        {
+          "prefs": [
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja-JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja-Hira"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-US"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-GB"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-AU"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-US",
+            "ja-JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-GB",
+            "fr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "it-IT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "it-IT",
+            "fr-CA"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr-CA"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr-CH",
+            "de-CH"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-ES"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-MX"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-419"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-US"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de-AT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de-CH"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de",
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "xx",
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "xx-YY"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-CN"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-SG"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-TW"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-HK"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-MO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hant"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans-CN"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hant-TW"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans-CN",
+            "en"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "yue"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-BR"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-PT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-AO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ko"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ko-KR"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Latn"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Cyrl"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-RS"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Latn-RS"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sh"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "hr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "bs"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "iw"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "he"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "in"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "id"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "tl"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fil"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "no"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "nb"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "nn"
+          ],
+          "want": "nn-NO"
+        },
+        {
+          "prefs": [
+            "nn-NO"
+          ],
+          "want": "nn-NO"
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": "nn-NO"
+        },
+        {
+          "prefs": [
+            "nb-NO"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "not a tag"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            ""
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "C"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "POSIX"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja_JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "JA-jp"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-hant-tw"
+          ],
+          "want": ""
+        }
+      ]
+    },
+    {
+      "available": [
+        "nb",
+        "nn"
+      ],
+      "cases": [
+        {
+          "prefs": [
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja-JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja-Hira"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-US"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-GB"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-AU"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-US",
+            "ja-JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-GB",
+            "fr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "it-IT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "it-IT",
+            "fr-CA"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr-CA"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr-CH",
+            "de-CH"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-ES"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-MX"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-419"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-US"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de-AT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de-CH"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de",
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "xx",
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "xx-YY"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-CN"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-SG"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-TW"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-HK"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-MO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hant"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans-CN"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hant-TW"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans-CN",
+            "en"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "yue"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-BR"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-PT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-AO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ko"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ko-KR"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Latn"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Cyrl"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-RS"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Latn-RS"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sh"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "hr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "bs"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "iw"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "he"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "in"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "id"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "tl"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fil"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "no"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "nb"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "nn"
+          ],
+          "want": "nn"
+        },
+        {
+          "prefs": [
+            "nn-NO"
+          ],
+          "want": "nn"
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": "nn"
+        },
+        {
+          "prefs": [
+            "nb-NO"
+          ],
+          "want": "nb"
+        },
+        {
+          "prefs": [
+            "not a tag"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            ""
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "C"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "POSIX"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja_JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "JA-jp"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-hant-tw"
+          ],
+          "want": ""
+        }
+      ]
+    },
+    {
+      "available": [
+        "nn"
+      ],
+      "cases": [
+        {
+          "prefs": [
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja-JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ja-Hira"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-US"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-GB"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-AU"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-US",
+            "ja-JP"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "en-GB",
+            "fr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "it-IT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "it-IT",
+            "fr-CA"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr-CA"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fr-CH",
+            "de-CH"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-ES"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-MX"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-419"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "es-US"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de-AT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de-CH"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "de",
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "xx",
+            "ja"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "xx-YY"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-CN"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-SG"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-TW"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-HK"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-MO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hant"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans-CN"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hant-TW"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "zh-Hans-CN",
+            "en"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "yue"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-BR"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-PT"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "pt-AO"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ko"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "ko-KR"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Latn"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Cyrl"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-RS"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sr-Latn-RS"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "sh"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "hr"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "bs"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "iw"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "he"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "in"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "id"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "tl"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "fil"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "no"
+          ],
+          "want": ""
+        },
+        {
+          "prefs": [
+            "nb"
+          ],
+          "want": "nn"
+        },
+        {
+          "prefs": [
+            "nn"
+          ],
+          "want": "nn"
+        },
+        {
+          "prefs": [
+            "nn-NO"
+          ],
+          "want": "nn"
+        },
+        {
+          "prefs": [
+            "nn",
+            "nb"
+          ],
+          "want": "nn"
+        },
+        {
+          "prefs": [
+            "nb-NO"
+          ],
+          "want": "nn"
         },
         {
           "prefs": [
