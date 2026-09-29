@@ -5,8 +5,9 @@ description: Common questions about Localizer.
 
 ## Does Localizer slow down my CLI?
 
-Not noticeably, but it isn’t free. Deciding the language reads a few environment variables (well under a
-millisecond) or, when none of them is set, the operating system’s language setting (about 9 ms on macOS).
+Not noticeably, but it isn’t free. Deciding the language reads a few environment variables or, when none of
+them is set, the operating system’s language setting, which on macOS is read from a preferences file; either
+takes well under a millisecond.
 For a language other than English, one catalog is decoded at startup: a few milliseconds for a CLI with
 thousands of strings; the Python runtime also installs its hooks then (about 10 ms in all) and costs about
 25 ms to import (Python 3.13 on a recent laptop). Help is translated only when it’s shown.
@@ -18,8 +19,10 @@ to anything and reports nothing.
 
 ## Will it translate my server’s responses or my JSON output?
 
-No. Only strings from your catalog change. Everything else, including data from servers, IDs, file names
-and serialized output, is printed exactly as it was.
+Not unless a line of it happens to match your catalog. Only text that equals a catalog entry or matches one
+of its format strings changes; everything else, including data from servers, IDs, file names and serialized
+output, is printed exactly as it was. Keep serialized output (`--output json`) away from the helpers and it
+can’t be matched at all.
 
 ## Which languages are supported?
 
@@ -47,7 +50,8 @@ are covered, and code that compares your original objects’ attributes keeps wo
 
 Translations are made by Claude, with the string’s context, your glossary and a per-language style guide.
 Every translation is validated before it’s proposed, and you review each pull request. To fix one, edit the
-catalog entry. Localizer never overwrites it.
+catalog entry. Localizer keeps it as long as it is valid (same placeholders as the source, no new control
+characters); an entry that fails that check is replaced on the next run.
 
 ## What if my CLI uses none of these frameworks?
 

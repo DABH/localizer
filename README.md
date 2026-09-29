@@ -59,8 +59,9 @@ The first pull request sets everything up, including the line above. The hosted 
 preview: see [Getting started](https://locale.dev/getting-started/). A coding agent can do the integration
 from [AGENTS.md](AGENTS.md) (also at https://locale.dev/AGENTS.md).
 
-Catalogs are plain JSON that you can also write or edit by hand. Localizer never overwrites an existing
-translation.
+Catalogs are plain JSON that you can also write or edit by hand. Localizer keeps a translation you edited
+as long as it is valid (same placeholders as the source, no new control characters); only an entry that
+fails that check is replaced, and entries whose source string is gone are removed.
 
 ## What gets translated
 
@@ -77,18 +78,23 @@ Your own runtime messages go through a few helpers at your output chokepoints:
 | `localizer.T(s)` | `localizer.t(s)` | Translate a string. For a format string, call it before formatting. |
 | `localizer.Sprintf(format, args...)` | `localizer.tf(fmt, *args, **kwargs)` | Format with a translated format string. |
 | `localizer.Error(err)` | `localizer.error(exc)` | Translate an error for display. Server text stays as it is. |
-| `localizer.Writer(w)` | `localizer.translate(text, mode)` | Translate already formatted text at a chokepoint. |
+| `localizer.Translate(s, mode)` | `localizer.translate(text, mode)` | Translate already formatted text at a chokepoint. The mode (output, help or error) decides how composite text may be split. |
+| `localizer.Writer(w)` | — | An `io.Writer` that translates what is written through it, one `Write` at a time. |
 
-Dynamic data (server responses, IDs, JSON and YAML output) is never translated. Only strings found in your
-catalog change, and anything else passes through untouched.
+Only text that matches an entry in your catalog changes: the exact string, the formatted output of a
+format string in the catalog (its values are carried over), or, in text of several lines, a paragraph or
+line that does either. Everything else passes through byte for byte. Dynamic data (server responses, IDs,
+JSON and YAML output) is therefore left alone, unless a line of it happens to equal a catalog entry or to
+match one of its format strings; that line is translated too. Keep serialized output away from the helpers.
 
 ## Language selection
 
-`LOCALIZER_LANG` (or an app-specific variable: `localizer.WithEnvVar` / `env_var=`) → `LC_ALL` →
-`LC_MESSAGES` → `LANG` (with GNU `LANGUAGE`) → the OS setting (macOS preferred languages, Windows display
-language) → English. `C` and `POSIX` locales keep English, so scripts stay stable. `LOCALIZER_LANG=off`
-disables localization. `LOCALIZER_LANG=qps` pseudo-localizes every known string, which is handy for
-spotting strings that don't go through Localizer yet.
+An app-specific variable (`localizer.WithEnvVar` / `env_var=`) → `LOCALIZER_LANG` → the first of `LC_ALL`,
+`LC_MESSAGES` and `LANG` that has a value, with GNU `LANGUAGE` listing preferred languages ahead of it →
+`LANGUAGE` alone → the OS setting (the macOS preferred languages, read from the user's preferences file;
+the Windows display languages) → English. `C` and `POSIX` locales keep English, so scripts stay stable.
+`LOCALIZER_LANG=off` disables localization. `LOCALIZER_LANG=qps` pseudo-localizes every known string, which
+is handy for spotting strings that don't go through Localizer yet.
 
 ## Try it
 

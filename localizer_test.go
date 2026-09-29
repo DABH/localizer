@@ -377,6 +377,38 @@ func TestCompletionRequestTranslatesEagerly(t *testing.T) {
 	}
 }
 
+func TestCompletionHelpIsTranslated(t *testing.T) {
+	// Cobra's completion command carries the root's name inside a two-line Long. The built-in catalog holds
+	// that text as one multi-line format, which has to win over the one-line "Generate the autocompletion
+	// script for %s" (that would capture the rest of the text as a value and garble the help).
+	root := localized(t, map[string]string{"LOCALIZER_LANG": "ja"})
+	out, _, err := run(root, "completion", "--help")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"指定したシェル用の demo の自動補完スクリプトを生成します。\n生成したスクリプトの使い方は、各サブコマンドのヘルプを参照してください。",
+		"使い方:\n  demo completion [command]",
+		"利用可能なコマンド:",
+		"bash 用の自動補完スクリプトを生成します",
+		"zsh 用の自動補完スクリプトを生成します",
+		"completion のヘルプ",
+		"コマンドの詳細については \"demo completion [command] --help\" を実行してください。",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("completion help missing %q:\n%s", want, out)
+		}
+	}
+	for _, english := range []string{
+		"Generate the autocompletion", "for the specified shell", "See each sub-command",
+		"Usage:", "Available Commands:", "help for completion", "Use \"demo completion",
+	} {
+		if strings.Contains(out, english) {
+			t.Errorf("completion help still contains %q:\n%s", english, out)
+		}
+	}
+}
+
 func TestDeprecationNoticesUseTranslatedReasons(t *testing.T) {
 	root := localized(t, map[string]string{"LANG": "ja_JP.UTF-8"})
 	out, _, _ := run(root, "topic", "create", "orders", "--topic-name", "x")

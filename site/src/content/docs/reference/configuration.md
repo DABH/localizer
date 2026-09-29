@@ -70,5 +70,22 @@ extract:
 | `extract.strings` | none | Strings to translate that don’t appear in your source. |
 | `extract.skip_log_levels` | Go: `debug, trace`; Python: all | Log levels whose messages stay in English. Set a list (even `[]`) to have Python `logging` messages translated. |
 
+## Validation
+
+The service checks `.localizer.yml` before it does anything else, and reports a problem instead of guessing:
+
+- Unknown keys are errors, so a misspelled key (`langauges:`) is caught rather than silently selecting the
+  defaults.
+- `locales_dir` and the `extract.include` entries are cleaned and must stay inside the repository: relative,
+  and neither `.`, `..` nor absolute.
+- Language tags must be valid [BCP 47](https://www.rfc-editor.org/info/bcp47) and take their canonical
+  spelling; duplicates are dropped, and `en`, the source language, is rejected.
+- `extract.exclude` patterns must be valid globs with at most eight `**` segments, and are anchored at the
+  repository root.
+- Glossary, style and `extract` values are bounded in number and length, and control characters are
+  stripped from glossary terms and style text.
+
+The directories that extraction always skips are listed under `extract.exclude` above.
+
 Changes to `.localizer.yml` take effect on the next sync. Existing translations aren’t redone when you
 change the glossary or style. To retranslate an entry, delete it from the catalog.

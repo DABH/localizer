@@ -60,11 +60,16 @@ $ LOCALIZER_LANG=qps taskctl --help
 
 Two more switches help with coverage:
 
-- `LOCALIZER_DEBUG=1` reports untranslated strings (and, in Python, hook errors that were swallowed) on
-  stderr.
+- `LOCALIZER_DEBUG=1` reports on stderr each help string that has no translation, as it renders
+  (`localizer: untranslated (ja): "Add a task."`), and internal failures the runtime swallowed: a catalog
+  that fails to load, a hook that failed, in Go a translation that would break a template. Misses in
+  output and error messages aren’t reported; pseudo-localization shows those. Together with
+  `LOCALIZER_DUMP`, which looks up every help string in the tree, it reports every help miss at once.
 - `LOCALIZER_DUMP=<file>` writes every help string in the command tree as JSON, including whether each one
   was translated. Go writes it when `Localize` runs, and so does Python for an argparse parser; for Typer
-  and Click, Python writes it the first time help renders, so run `--help`:
+  and Click, Python writes it the first time help renders, so run `--help`. Go creates the file new (an
+  existing file is never overwritten) and ignores the variable when the process runs as root or setuid;
+  Python replaces an existing file:
 
   ```json
   {
