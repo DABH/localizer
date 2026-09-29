@@ -21,4 +21,4 @@ line before the app runs, a few `T`/`t` calls at output chokepoints, an English 
 opens the pull request that fills in the catalogs.
 
 The agent doesn't translate anything itself: translations always come from the service, and your
-corrections to them are never overwritten.
+corrections to them are kept as long as they stay valid (only an entry that fails validation is replaced).

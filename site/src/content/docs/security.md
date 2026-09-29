@@ -15,10 +15,16 @@ Localizer is built so that adopting it adds as little risk as possible for CLI m
   `str.format` fields, printf verbs and Rich markup tags; backquoted spans) and adds no control characters
   or terminal escape sequences. Anything else falls back to English. A malicious catalog entry can’t inject
   escape sequences, change how arguments are rendered, or allocate huge padding.
-- **Only known strings change.** Output that doesn’t match a catalog entry, such as server responses, IDs
-  and JSON, passes through untouched. Reverse matching refuses captures that look like prose.
-- **Python hooks fail open.** The runtime works on copies of your command objects and never modifies them;
-  any internal error leaves the CLI in English rather than breaking it.
+- **Only known strings change.** Only text that matches a catalog entry is replaced: the exact string, the
+  formatted output of a format string in the catalog, or a paragraph or line of longer text that does
+  either. Everything else passes through byte for byte, so server responses, IDs and JSON are untouched
+  unless a line of them happens to equal a catalog entry or to match one of its format strings. Reverse
+  matching refuses captures that look like prose: a format with little literal text may not capture a
+  lowercase phrase, and outside error messages a capture may not span lines or sentences.
+- **The hooks fail open.** In Go, `Init` and `Localize` never panic, and the help hooks and the error
+  writer fall back to the original text when anything fails inside them. In Python, the runtime works on
+  copies of your command objects and never modifies them. An internal error leaves the CLI in English rather
+  than breaking it.
 
 ## Your repository
 
@@ -33,7 +39,10 @@ Localizer is built so that adopting it adds as little risk as possible for CLI m
   catalogs, plus, in the onboarding pull request, `.localizer.yml`, the locales package file
   (`locales/embed.go` or `locales/__init__.py`), the one-line integration and, for Python, the dependency in
   `pyproject.toml`. An allowlist in the service enforces this.
-- **Human edits win.** Existing catalog entries are never retranslated, so your corrections stay.
+- **Human edits win.** A valid catalog entry is never retranslated, so your corrections stay, on your default
+  branch and on the `localizer-translations` branch alike. Only an entry that fails validation (its
+  placeholders differ from the source’s, or it adds control characters) is replaced, and entries whose source
+  string disappeared are removed.
 
 ## The service
 
@@ -44,7 +53,9 @@ Localizer is built so that adopting it adds as little risk as possible for CLI m
   Nothing is built, imported or run, and no source is kept after a job.
 - **Abuse resistance.** The service translates only strings it extracted itself from a public
   repository’s default branch, so a forged trigger can’t make it translate arbitrary text. Per-account
-  monthly quotas, a translation memory (nothing is paid for twice) and a cap on concurrent jobs bound cost.
+  monthly quotas, a per-repository translation memory (a string is never paid for twice in the same
+  repository), a 30-day memory of strings that failed validation or that the model refused (they aren’t
+  retried or charged meanwhile) and a cap on concurrent jobs bound cost.
 - **Prompt injection.** Strings are sent to the model as JSON data with a fixed instruction set. Every
   answer is schema-checked and validated (placeholders, backquotes, markup, URLs, flags, `<args>`, glossary
   terms, quoting, paragraph structure, length) before it can reach a pull request, and the runtime checks
@@ -61,8 +72,9 @@ Localizer is built so that adopting it adds as little risk as possible for CLI m
 
 Localizer doesn’t have a SOC 2 report yet. The design keeps the scope small: public data only, no end-user
 data, no customer secrets, no retained source, infrastructure as code, least-privilege IAM, encryption at
-rest and in transit, and audit logging. The subprocessors are AWS (including Claude, through Amazon Bedrock
-or Claude Platform on AWS) and GitHub.
+rest and in transit, and audit logging. The subprocessors are AWS (hosting, and Claude through Amazon
+Bedrock), GitHub (source access and pull requests) and Spaceship (email forwarding for the support addresses
+at locale.dev).
 
 ## Reporting a vulnerability
 
