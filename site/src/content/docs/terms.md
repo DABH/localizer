@@ -71,8 +71,8 @@ after the notice period.
 
 You keep all rights to your code and content. You allow us to access, copy and process the repositories you
 connect, and the strings and translations the Service produces for them, only as needed to provide the
-Service. This includes keeping the strings and their translations as a translation memory, so that the same
-string is never translated and paid for twice.
+Service. This includes keeping the strings and their translations as a translation memory for that
+repository, so that the same string is never translated and paid for twice within it.
 
 The translations the Service produces for your repositories are yours. We claim no rights in them and assign to
 you any rights we may have in them.

@@ -33,9 +33,9 @@ When you connect a repository with the GitHub App or the GitHub Action, we proce
   involved, and the commit being processed.
 - **Source code:** the public source code of the repository at that commit. It is downloaded into memory,
   used to find the strings your tool shows to its users, and discarded when the job ends. We don't store it.
-- **Strings and translations:** the extracted strings and their translations, kept as a translation memory for
-  your repositories, so the same string is never translated and paid for twice. To have it deleted, email
-  us.
+- **Strings and translations:** the extracted strings and their translations, kept as a translation memory
+  per repository, so the same string is never translated and paid for twice within a repository. To have it
+  deleted, email us.
 - **Job records and usage:** the outcome of each job (status, counts, cost), kept for 90 days, and monthly usage
   counters.
 - **GitHub Action results:** the files returned to your workflow, kept encrypted for at most 7 days.
@@ -67,16 +67,18 @@ obligations such as tax and accounting rules.
 
 ## Who else processes it
 
-We don't sell personal data. We share it only with the providers that run parts of the Service for us:
+We don't sell personal data. We share it only with the providers that run parts of the Service for us (our
+subprocessors):
 
 | Provider | Role |
 | --- | --- |
 | Amazon Web Services | Hosting in the United States (us-east-2), the website, and translation models on Amazon Bedrock |
 | GitHub | Repositories, the GitHub App and the GitHub Action |
-| Polar | Payments, as merchant of record |
-| Spaceship | Email forwarding for locale.dev |
+| Spaceship | Email forwarding for the support addresses at locale.dev |
 
-We may also disclose data when the law requires us to.
+Polar, our merchant of record, processes your purchase as an independent controller under its own privacy
+policy (see Subscriptions above), not as our subprocessor. We may also disclose data when the law requires
+us to.
 
 ## Where it is stored
 
