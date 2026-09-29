@@ -149,6 +149,8 @@ func TestOnMiss(t *testing.T) {
 	}
 }
 
+// BenchmarkTranslate measures single lookups against a 10k-entry catalog with 1k format strings: an exact
+// hit, a reverse-matched format and a miss. Help mode is not memoized, so every iteration does the lookup.
 func BenchmarkTranslate(b *testing.B) {
 	cat := map[string]string{}
 	for i := 0; i < 10000; i++ {
@@ -158,11 +160,24 @@ func BenchmarkTranslate(b *testing.B) {
 		}
 	}
 	e := New("ja", cat)
-	inputs := []string{"Message number 42 about things.", "Created resource kind 990 named \"x\".", "some server data line that misses"}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		// Defeat the memo to measure raw lookups.
-		e.Translate(inputs[i%3]+strings.Repeat(" ", i%64), Output)
+	cases := []struct{ name, in, want string }{
+		{"exact", "Message number 42 about things.", "メッセージ 42。"},
+		{"pattern", "Created resource kind 990 named \"x\".", "種類 990 の \"x\" を作成しました。"},
+		{"miss", "some server data line that misses", "some server data line that misses"},
+	}
+	for _, c := range cases {
+		// Checks the inputs and compiles the patterns before anything is timed.
+		if got := e.Translate(c.in, Help); got != c.want {
+			b.Fatalf("%s: Translate = %q, want %q", c.name, got, c.want)
+		}
+	}
+	for _, c := range cases {
+		b.Run(c.name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				e.Translate(c.in, Help)
+			}
+		})
 	}
 }
 
