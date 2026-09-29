@@ -82,9 +82,8 @@ The service checks `.localizer.yml` before it does anything else, and reports a 
   spelling; duplicates are dropped, and `en`, the source language, is rejected.
 - `extract.exclude` patterns must be valid globs with at most eight `**` segments, and are anchored at the
   repository root.
-- `translate.effort`, if set, must be one of the levels the service knows.
-- Glossary, style, `extract` and `translate` values are bounded in number and length, and control characters
-  are stripped from glossary terms and style text.
+- Glossary, style and `extract` values are bounded in number and length, and control characters are
+  stripped from glossary terms and style text.
 
 The directories that extraction always skips are listed under `extract.exclude` above.
 
