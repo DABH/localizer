@@ -29,6 +29,7 @@ no network calls, and it has no telemetry or credentials. The full API is on
 | `Error(err error) string` | An error message translated for display. CLI-authored parts of a wrapped chain are translated, and server text is left as it is. `""` for a nil error. |
 | `Translate(s string, mode Mode) string` | Already formatted text translated in the given mode: `ModeOutput` for general output (it never splits `label: rest`, which could be data), `ModeHelp` for help text, `ModeError` for error messages, including wrapped-error chains. It is what `Writer` and `Error` use. |
 | `Writer(w io.Writer) io.Writer` | A writer that translates CLI strings written to `w`, one `Write` at a time, in output mode. It returns `w` itself when output isn’t localized, exposes `w`’s `Fd` method for terminal detection, and writes the original bytes if the translation fails. |
+| `WriterMode(w io.Writer, mode Mode) io.Writer` | `Writer` with an explicit mode: `ModeHelp` for a stream that carries help text, `ModeError` for one that carries error messages. The adapters for frameworks other than Cobra use it on the framework’s help and error writers. |
 | `Lang() string` | The active language tag (`"qps"` for pseudo-localization), or `""` for English. |
 | `Reset()` | Undoes `Init`, for tests: the helpers become identity functions and the next `Localize` detects the language afresh. Command trees already localized keep their translated strings. |
 

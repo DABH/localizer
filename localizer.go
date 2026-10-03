@@ -275,10 +275,17 @@ func Error(err error) string {
 // not being localized. The returned writer exposes w's Fd method, if any, for terminal detection, and
 // follows later Init calls.
 func Writer(w io.Writer) io.Writer {
+	return WriterMode(w, ModeOutput)
+}
+
+// WriterMode is Writer with an explicit translation mode: ModeHelp for a stream that carries help text,
+// ModeError for one that carries error messages. The adapters for frameworks other than Cobra use it on
+// the framework's own help and error writers.
+func WriterMode(w io.Writer, mode Mode) io.Writer {
 	if current.Load() == nil {
 		return w
 	}
-	return &writer{w: w, mode: engine.Output}
+	return &writer{w: w, mode: mode}
 }
 
 type writer struct {
