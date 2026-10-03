@@ -1,0 +1,138 @@
+---
+title: urfave/cli
+description: Localize a urfave/cli v3 application with one line, what gets translated, and what the adapter changes.
+---
+
+The `github.com/DABH/localizer/urfave` package renders a [urfave/cli](https://github.com/urfave/cli) v3
+application's help, usage errors and built-in messages in the user's language. The catalogs are the same
+`locales/*.json` files as for every other framework; the service writes them, and your binary embeds them.
+
+## The one line
+
+```go
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/urfave/cli/v3"
+
+	"github.com/DABH/localizer"
+	"github.com/DABH/localizer/urfave"
+	"example.com/yourcli/locales"
+)
+
+func main() {
+	cmd := newRootCmd() // your *cli.Command, with every subcommand and flag added
+	urfave.Localize(cmd, locales.FS) // call last, right before Run
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, localizer.Error(err))
+		os.Exit(1)
+	}
+}
+```
+
+`locales/embed.go` is the usual two lines:
+
+```go
+package locales
+
+import "embed"
+
+//go:embed *.json
+var FS embed.FS
+```
+
+`Localize` takes the same options as the Cobra integration: `localizer.WithEnvVar("YOURCLI_LANG")` adds an
+application-specific override variable, `localizer.WithLanguage(tag)` forces a language (for example from a
+`--lang` flag; `"en"` or `"off"` disables localization). It detects the language once, through
+`localizer.Init`, so the [helpers](#your-own-messages) work afterwards. When output stays in English,
+`Localize` changes nothing at all. It never panics: an internal failure leaves the affected output in
+English.
+
+Call it on the production path only, after every command and flag is registered. Unit tests, documentation
+generators and linters that build the command tree directly then stay in English; subprocess tests pin
+`LOCALIZER_LANG=en` as described in [Testing](/guides/testing/).
+
+## What gets translated
+
+Your command tree, in place, right when `Localize` runs:
+
+- every command's `Usage`, `UsageText`, `Description`, `ArgsUsage`, `Category` and `Deprecated` text, and a
+  command's `CustomHelpTemplate` or `CustomRootCommandHelpTemplate`;
+- every flag's `Usage`, `Category`, `DefaultText` and `Deprecated` text, including the flags of
+  `MutuallyExclusiveFlags` groups and the groups' `Category`;
+- the `UsageText` of `Arguments`.
+
+A backquoted placeholder in a flag's usage (`` "Priority `level` to use." ``) keeps working: the catalog
+entry carries the same backquotes, and urfave/cli extracts the placeholder from the translation.
+
+urfave/cli's own strings, from Localizer's built-in catalogs for German, Spanish, French, Japanese, Korean,
+Brazilian Portuguese and Simplified Chinese:
+
+- the help templates: the section headings (`NAME:`, `USAGE:`, `VERSION:`, `DESCRIPTION:`, `AUTHOR(S):`,
+  `COMMANDS:`, `OPTIONS:`, `GLOBAL OPTIONS:`, `CATEGORY:`, `COPYRIGHT:`) and the tokens of the usage line
+  (`[global options]`, `[command [command options]]`, `[options]`, `[arguments...]`);
+- the `--help` and `--version` flags, the `help` command and, when shell completion is enabled, the
+  `completion` command and its subcommands;
+- the `(default: X)` suffix of flag usage lines and the `<name> version <version>` line;
+- the usage errors printed before the help (`Incorrect Usage: flag provided but not defined: -x`, `flag
+  needs an argument`, invalid values, required flags and arguments, mutually exclusive flags), the
+  `Did you mean …?` suggestion, `No help topic for 'x'`, and the deprecation notices for commands and flags.
+
+Everything else is left alone: command and flag names, your `Version`, `Authors` and `Copyright`, data your
+actions print.
+
+## Your own messages
+
+`Localize` calls `localizer.Init`, so the output helpers of the `localizer` package work in your actions:
+
+| Need | Helper |
+| --- | --- |
+| A string | `localizer.T("No tasks found.")` |
+| A format string | `localizer.Sprintf("Added task %d: %q\n", id, title)`, `localizer.Errorf(...)` |
+| An error for display | `localizer.Error(err)` |
+| Already formatted text at a chokepoint | `localizer.Translate(text, localizer.ModeOutput)` (or `ModeHelp`, `ModeError`) |
+| A stream | `localizer.Writer(w)` |
+
+`Run` returns errors untranslated: print them with `localizer.Error(err)`, as in the example above. Errors
+built with `cli.Exit` are printed by urfave/cli itself, through `cli.ErrWriter`, which `Localize` wraps:
+their messages are translated when the catalog has them.
+
+Call `T`/`Sprintf` on the format string before formatting, or `Translate`/`Writer` on the finished text.
+Never pass serialized output (JSON, YAML), paths, identifiers or server responses through them; logs stay
+in English. The [integration guide](/guides/integration/) has the details and what the service extracts.
+
+## What Localize changes
+
+urfave/cli keeps its help templates and built-in texts in package-level variables, so translating them
+means changing those variables for the rest of the process. `Localize`:
+
+- translates `cli.RootCommandHelpTemplate`, `cli.CommandHelpTemplate` and `cli.SubcommandHelpTemplate` in
+  place (only literal text; template actions are untouched, and a translation that would break a template is
+  skipped);
+- translates the `Usage` of `cli.HelpFlag` and `cli.VersionFlag`, and `cli.UsageCommandHelp`,
+  `cli.ArgsUsageCommandHelp` and `cli.SuggestDidYouMeanTemplate`;
+- wraps `cli.FlagStringer` (for the `(default: X)` suffix), `cli.VersionPrinter` (only while it is the
+  default one; a custom printer is kept) and `cli.ErrWriter`, and wraps the root command's `ErrWriter` — the
+  one you set, or `os.Stderr`.
+
+Call `Localize` once, from `main`, after the command tree is complete. Set your own `Writer`, `ErrWriter`,
+templates or `VersionPrinter` before calling it; an `ErrWriter` set afterwards replaces the wrapper and
+urfave/cli's own errors print in English again (which is also how you keep them in English on purpose).
+The wrappers consult the active language on every call, so a later `localizer.Init` that switches the
+language, or turns localization off, is followed; strings already translated in the tree and in the
+templates keep their translation. The command's `Writer` is not wrapped: help is translated at the source.
+
+## Limitations
+
+- Strings your code compares against must not change: a `Category` name or `Usage` text read back from
+  the tree after `Localize` has run is the translation. Compare names, not texts.
+- Built with urfave/cli's `urfave_cli_no_template` tag, help is rendered without templates, and the section
+  headings stay in English; the rest is translated as usual.
+- A `cli.Flag` implementation of your own is translated only if it is a pointer to a struct with `Usage`,
+  `Category`, `DefaultText` or `Deprecated` string fields (urfave/cli's own flag types all are). Flags
+  taken from the standard `flag` package with `AllowExtFlags` keep their English usage.
+- `LOCALIZER_DUMP` and the lazy, render-time translation of the Cobra adapter are not available; a urfave/cli
+  tree is translated eagerly when `Localize` runs, which takes well under a millisecond for a typical tool.
+- `localizer.WithoutErrWriter` is a Cobra option and has no effect here.
