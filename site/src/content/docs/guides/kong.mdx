@@ -1,0 +1,102 @@
+---
+title: Go with kong
+description: One option localizes a kong CLI’s help, flag and argument descriptions, headings and parse errors.
+---
+
+[kong](https://github.com/alecthomas/kong) describes a CLI with struct tags. Localizer’s adapter for it is the
+package `github.com/DABH/localizer/kongx`: its one option does for kong what `localizer.Localize` does for
+Cobra. The catalogs, the service that maintains them and the language selection are the same; this page
+covers what differs.
+
+## 1. The one line
+
+```go
+import (
+	"github.com/alecthomas/kong"
+
+	"github.com/DABH/localizer/kongx"
+	"example.com/yourcli/locales"
+)
+
+func main() {
+	var cli CLI
+	ctx := kong.Parse(&cli,
+		kong.Name("yourcli"),
+		kong.Description("yourcli keeps a small list of tasks."),
+		kongx.Localize(locales.FS), // last
+	)
+	ctx.FatalIfErrorf(ctx.Run())
+}
+```
+
+The option works the same way with `kong.New` and `kong.Must`. `locales/embed.go` embeds the catalogs
+exactly as in the [integration guide](../integration/); the onboarding pull request creates it.
+
+Two Localizer options can follow the catalogs: `localizer.WithEnvVar("YOURCLI_LANG")` adds an
+application-specific override variable, and `localizer.WithLanguage(tag)` forces a language, for example
+from a configuration file.
+
+## 2. What is translated
+
+- The help of every command, flag and positional argument (`help:"..."` tags, `kong.Description`,
+  `kong.DynamicCommand`, the detail text of a `HelpProvider`) and the titles and descriptions of command
+  and flag groups (`kong.Groups`, `kong.ExplicitGroups`, `group:"..."` tags).
+- kong’s own text: the `Usage:` label, the `Flags:`, `Commands:` and `Arguments:` headings, the
+  `Show context-sensitive help.` description of `--help` and the `Run "yourcli --help" for more
+  information.` hints. Built-in translations ship with the module in German, Spanish, French, Japanese,
+  Korean, Brazilian Portuguese and Simplified Chinese; your catalog can override any of them.
+- The parse errors kong prints: `unknown flag --x` (with its `did you mean "--y"?` suggestion),
+  `unexpected argument x`, `expected one of "add", "list"`, `missing flags: --name`, `missing positional
+  arguments <title>`, enum, integer, float, duration, boolean and `key=value` values, `--a and --b can't be
+  used together`, the `existingfile` and `existingdir` checks — and the `error` label of the
+  `yourcli: error: …` line they are printed on.
+- The messages of the errors your `Run` methods return, when kong displays them through
+  `ctx.FatalIfErrorf`, if your catalog has them.
+
+The model is translated right after kong builds it, before kong interpolates `${default}`, `${env}` and
+your own `kong.Vars`, so the catalog keys are the help texts as written in the tags, and a translation keeps
+the `${…}` references. A translation that drops or adds one is not used: kong would otherwise reject the
+application over an undefined variable, so the English text is shown instead.
+
+## 3. Option order
+
+Put `kongx.Localize` last. kong applies options in order, and translation runs at the stage where options
+such as `kong.Description`, `kong.Name` and `kong.AutoGroup` change the model after it is built: those must
+come before it. `kong.Writers` may come before or after; a writer assigned to `parser.Stdout` or
+`parser.Stderr` after `kong.New` returns replaces the translating one, and kong’s own text then prints in
+English.
+
+A help printer set with `kong.Help(...)` is kept. It renders the translated model; its own headings are
+translated when it writes them as whole lines the catalog knows, as kong’s does.
+
+## 4. Your own messages
+
+The [helpers](../integration/#2-your-own-messages) are the same as for Cobra: `localizer.T` for a string,
+`localizer.Sprintf` and `localizer.Errorf` for format strings, `localizer.Error` for an error you display,
+`localizer.Translate` for formatted text at a chokepoint, `localizer.Writer` for a stream. Call them after
+`kong.Parse`, which is where `kongx.Localize` detects the language.
+
+`parser.Stdout` is wrapped in output mode: a line written through it that the catalog knows is translated,
+and a `label: value` line is never split, so data written to the same stream is left alone. Never write
+serialized output (JSON, YAML, CSV) through the helpers.
+
+## 5. Testing
+
+Pin subprocess tests to English with `LOCALIZER_LANG=en` in the environment, as for Cobra. In-process tests
+that build the parser with `kongx.Localize` can force a language with `localizer.WithLanguage` and call
+`localizer.Reset()` in `t.Cleanup`; override `kong.Exit` so that `--help` and parse errors do not end the
+test binary. The pseudo-localization and debug switches of the [testing guide](../testing/) work the same
+way: `LOCALIZER_LANG=qps yourcli --help` shows what flows through Localizer, and `LOCALIZER_DEBUG=1` reports
+every help string in the model that has no translation when the parser is built.
+
+## 6. Limitations
+
+- kong measures the terminal only when `Stdout` is an `*os.File`. With the translating writer in place,
+  help is wrapped at 80 columns, or at `$COLUMNS` when that variable is set. English output, with
+  localization off, is byte for byte what kong prints without the option.
+- Messages that embed another message in a `%s` keep that part in English: kong’s `…; perhaps try
+  --flag="value"?` hint and `… (from envar NAME="value")` suffix, and the text of errors from the Go
+  standard library inside them (`time: invalid duration "x"`, `open x: no such file or directory`).
+- Flag and argument names, placeholders (`STRING`, `KEY=VALUE`), default and enum values are never
+  translated.
+- `LOCALIZER_DUMP` is implemented for Cobra command trees only.

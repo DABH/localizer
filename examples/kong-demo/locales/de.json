@@ -1,0 +1,25 @@
+{
+  "language": "de",
+  "messages": {
+    "Add a task.": "Eine Aufgabe hinzufügen.",
+    "Added task %d: %q": "Aufgabe %d hinzugefügt: %q",
+    "Completed task %d.": "Aufgabe %d abgeschlossen.",
+    "Done": "Erledigt",
+    "Due date in YYYY-MM-DD format.": "Fälligkeitsdatum im Format YYYY-MM-DD.",
+    "ID": "ID",
+    "ID of the task.": "ID der Aufgabe.",
+    "Include completed tasks.": "Abgeschlossene Aufgaben einbeziehen.",
+    "List tasks.": "Aufgaben auflisten.",
+    "Mark a task as done.": "Eine Aufgabe als erledigt markieren.",
+    "No tasks found.": "Keine Aufgaben gefunden.",
+    "Output format: human or json.": "Ausgabeformat: human oder json.",
+    "Print more details.": "Mehr Details ausgeben.",
+    "Priority": "Priorität",
+    "Priority of the task: low, normal or high.": "Priorität der Aufgabe: low, normal oder high.",
+    "Title": "Titel",
+    "Title of the task.": "Titel der Aufgabe.",
+    "task %d not found": "Aufgabe %d nicht gefunden",
+    "taskctl keeps a small list of tasks.\nUse it to add, list and complete tasks.": "taskctl verwaltet eine kleine Aufgabenliste.\nDamit können Sie Aufgaben hinzufügen, auflisten und abschließen."
+  },
+  "version": 1
+}
