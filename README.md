@@ -55,8 +55,8 @@ Connect it with:
 - the **[Localizer GitHub App](https://locale.dev/guides/github-app/)**. Install it and merge
   the pull requests it opens.
 
-The first pull request sets everything up, including the line above. The hosted service is in private
-preview: see [Getting started](https://locale.dev/getting-started/). A coding agent can do the integration
+The first pull request sets everything up, including the line above. The hosted service needs a
+[subscription](https://locale.dev/pricing/); see [Getting started](https://locale.dev/getting-started/). A coding agent can do the integration
 from [AGENTS.md](AGENTS.md) (also at https://locale.dev/AGENTS.md).
 
 Catalogs are plain JSON that you can also write or edit by hand. Localizer keeps a translation you edited
