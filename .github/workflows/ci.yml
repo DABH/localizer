@@ -128,3 +128,13 @@ jobs:
       - run: |
           go get github.com/spf13/cobra@latest
           go test ./...
+
+  # The minimum Go version the module declares in go.mod, on Linux; the matrix above tests the latest.
+  min-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.25"
+      - run: go vet ./... && go test ./...

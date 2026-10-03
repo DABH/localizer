@@ -18,7 +18,7 @@ authored with an email address that is linked to your GitHub account.
 
 ## Development
 
-The Go library needs Go 1.22 or later; the Python runtime (`python/`) needs Python 3.10 or later and [uv](https://docs.astral.sh/uv/) for its tests; the documentation site needs Node.js 24.
+The Go library needs Go 1.25 or later (the two latest Go releases are tested); the Python runtime (`python/`) needs Python 3.10 or later and [uv](https://docs.astral.sh/uv/) for its tests; the documentation site needs Node.js 24.
 
 ```sh
 make            # gofmt check, go vet and tests
