@@ -9,13 +9,15 @@ host program.
 
 from __future__ import annotations
 
+import itertools
 import os
+import string
 import sys
 import traceback
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from . import _catalog, _locale, builtin
+from . import _catalog, _encoding, _locale, builtin
 from ._catalog import Traversable
 from ._engine import Engine, Mode
 
@@ -85,6 +87,10 @@ def _setup(locales, env_var: str | Sequence[str] | None, language: str | None) -
     debug = debug_enabled()
     dump = os.environ.get("LOCALIZER_DUMP") or ""
     if res.pseudo:
+        from . import _format
+
+        if _unencodable("qps", [_format.pseudo(string.ascii_letters + string.digits)]):
+            return None
         catalogs = [_load_messages(root, l) for l in available]
         catalogs.extend(builtin.messages(l) for l in builtin.languages())
         eng = Engine.pseudo(*catalogs)
@@ -99,7 +105,10 @@ def _setup(locales, env_var: str | Sequence[str] | None, language: str | None) -
     except Exception:
         debug_exc(f"loading the {lang} catalog")
         return None
-    eng = Engine(lang, builtin.messages(lang), app)
+    builtin_msgs = builtin.messages(lang)
+    if _unencodable(lang, itertools.chain(builtin_msgs.values(), app.values())):
+        return None
+    eng = Engine(lang, builtin_msgs, app)
     if debug:
 
         def on_miss(s: str, _mode: Mode) -> None:
@@ -108,6 +117,17 @@ def _setup(locales, env_var: str | Sequence[str] | None, language: str | None) -
 
         eng.on_miss = on_miss
     return State(eng, lang, debug, dump)
+
+
+def _unencodable(lang: str, texts) -> bool:
+    """Whether a standard stream could not show the language's text, in which case output stays in
+    English: a translated help line would otherwise raise UnicodeEncodeError or print escapes (on
+    Windows, redirected output uses the ANSI code page unless PYTHONUTF8=1)."""
+    where = _encoding.unencodable_stream(texts)
+    if where:
+        debugf(f"{where} cannot encode the {lang} catalog; output stays in English (set PYTHONUTF8=1 to allow it)")
+        return True
+    return False
 
 
 def init(locales, *, env_var: str | Sequence[str] | None = None, language: str | None = None) -> str:
