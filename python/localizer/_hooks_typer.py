@@ -1,7 +1,12 @@
 # Copyright (c) 2026 Snizyx Software LLC. All rights reserved.
 # SPDX-License-Identifier: NCSA
 
-"""Hooks for Typer's own rendering: its rich help and error panels and the strings it builds itself."""
+"""Hooks for Typer's own rendering: its rich help and error panels and the strings it builds itself.
+
+Typer imports ``typer.rich_utils`` (and with it Rich's Markdown renderer, Pygments and a good part of Rich)
+only when it renders help or an error. Importing it at ``localize()`` time would cost every invocation
+tens of milliseconds, so its renderers are wrapped the moment Typer imports it.
+"""
 
 from __future__ import annotations
 
@@ -87,14 +92,16 @@ def install(*, error_hook: bool) -> None:
     if _hooks.installed("typer"):
         return
     _hooks.mark("typer")
-    core = _module("typer.core")
+    core = _module("typer.core")  # imported with typer itself
     if core is not None and getattr(core, "_", None) is gettext.gettext:
         _hooks.patch(core, "_", lambda s: _hooks_click._lookup(s))
-    rich_utils = _module("typer.rich_utils")
-    if rich_utils is None:
-        return
-    # Each renderer runs on translated input with the translated constants; if anything in that
-    # fails (a translation that breaks Rich markup, say) the original input renders in English.
+    _hooks.on_import("typer.rich_utils", lambda rich_utils: _hook_rich_utils(rich_utils, error_hook))
+
+
+def _hook_rich_utils(rich_utils, error_hook: bool) -> None:
+    """Wraps the renderers of ``typer.rich_utils``. Each runs on translated input with the translated
+    constants; if anything in that fails (a translation that breaks Rich markup, say) the original input
+    renders in English."""
     orig_help = getattr(rich_utils, "rich_format_help", None)
     if orig_help is not None:
 

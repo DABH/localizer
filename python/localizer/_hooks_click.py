@@ -18,6 +18,7 @@ import copy
 import gettext
 import importlib
 import inspect
+import sys
 import threading
 from typing import Any
 
@@ -25,6 +26,11 @@ from . import _api, _hooks
 from ._engine import Mode
 
 _render = threading.local()  # per-thread flags: a help render, a prompt or an error's show() in progress
+
+# Modules with gettext strings besides the root, core, formatting and exceptions. Click imports the first
+# four itself; the editor and pager helpers, shell completion and the Windows console layer are loaded on
+# demand (``_winconsole`` imports ctypes) and get their bindings redirected when that happens.
+_GETTEXT_MODULES = ("parser", "decorators", "types", "termui", "utils", "_termui_impl", "shell_completion", "_winconsole")
 
 
 @contextlib.contextmanager
@@ -206,12 +212,13 @@ def _wrap_formatter(formatter_cls: type) -> None:
 
 
 def _patch_gettext(mod) -> None:
-    """Redirects a module's ``_``/``ngettext`` bindings, but only the plain gettext ones: an
+    """Redirects a module's ``_``/``gettext``/``ngettext`` bindings, but only the plain gettext ones: an
     application's own translation function is left alone."""
     if mod is None:
         return
-    if getattr(mod, "_", None) is gettext.gettext:
-        _hooks.patch(mod, "_", lambda s: _lookup(s))
+    for name in ("_", "gettext"):
+        if getattr(mod, name, None) is gettext.gettext:
+            _hooks.patch(mod, name, lambda s: _lookup(s))
     if getattr(mod, "ngettext", None) is gettext.ngettext:
         _hooks.patch(mod, "ngettext", lambda s, p, n: _lookup(s if n == 1 else p))
 
@@ -341,7 +348,8 @@ def _wrap_prompts(prefix: str, modules: list) -> None:
 
 
 def install(prefix: str, *, error_hook: bool, prompt_hook: bool) -> None:
-    """Hooks one Click implementation: ``"click"`` or ``"typer._click"``."""
+    """Hooks one Click implementation: ``"click"`` or ``"typer._click"``. Only modules the framework has
+    imported are touched; the ones it loads on demand are hooked when it does."""
     if _hooks.installed(prefix):
         return
     root = _module(prefix)
@@ -358,12 +366,14 @@ def install(prefix: str, *, error_hook: bool, prompt_hook: bool) -> None:
     if isinstance(formatter_cls, type):
         _wrap_formatter(formatter_cls)
     modules = [root, core, formatting, exceptions]
-    for name in ("parser", "decorators", "types", "termui", "_termui_impl", "utils", "shell_completion", "_winconsole"):
-        mod = _module(prefix + "." + name)
-        if mod is not None:
-            modules.append(mod)
     for mod in modules:
         _patch_gettext(mod)
+    for name in _GETTEXT_MODULES:
+        full = prefix + "." + name
+        mod = sys.modules.get(full)
+        if mod is not None:
+            modules.append(mod)
+        _hooks.on_import(full, _patch_gettext)
     if error_hook:
         echo_hooked = _wrap_echo(exceptions, "in_show", "error echo", lines_only=False)
         for name in ("ClickException", "UsageError"):
@@ -371,5 +381,5 @@ def install(prefix: str, *, error_hook: bool, prompt_hook: bool) -> None:
             if isinstance(cls, type):
                 _wrap_show(cls, echo_hooked)
     if prompt_hook:
-        typer = _module("typer") if prefix != "click" or "typer" in __import__("sys").modules else None
+        typer = sys.modules.get("typer") if prefix != "click" or "typer" in sys.modules else None
         _wrap_prompts(prefix, modules + ([typer] if typer is not None else []))
