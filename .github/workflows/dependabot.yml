@@ -1,0 +1,18 @@
+# Dependabot pull requests merge themselves once the ruleset's required checks are green: this enables
+# GitHub's auto-merge (squash) on each one; GitHub does the merge when the checks pass and nothing else.
+name: dependabot
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'DABH/localizer'
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh pr merge --auto --squash "$PR"
+        env:
+          PR: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
