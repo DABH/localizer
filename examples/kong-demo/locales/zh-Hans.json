@@ -1,0 +1,25 @@
+{
+  "language": "zh-Hans",
+  "messages": {
+    "Add a task.": "添加任务。",
+    "Added task %d: %q": "已添加任务 %d：%q",
+    "Completed task %d.": "已完成任务 %d。",
+    "Done": "已完成",
+    "Due date in YYYY-MM-DD format.": "截止日期，格式为 YYYY-MM-DD。",
+    "ID": "ID",
+    "ID of the task.": "任务的 ID。",
+    "Include completed tasks.": "包含已完成的任务。",
+    "List tasks.": "列出任务。",
+    "Mark a task as done.": "将任务标记为已完成。",
+    "No tasks found.": "未找到任务。",
+    "Output format: human or json.": "输出格式：human 或 json。",
+    "Print more details.": "输出更多详细信息。",
+    "Priority": "优先级",
+    "Priority of the task: low, normal or high.": "任务的优先级：low、normal 或 high。",
+    "Title": "标题",
+    "Title of the task.": "任务的标题。",
+    "task %d not found": "未找到任务 %d",
+    "taskctl keeps a small list of tasks.\nUse it to add, list and complete tasks.": "taskctl 维护一个简单的任务列表。\n可用它添加、列出和完成任务。"
+  },
+  "version": 1
+}
