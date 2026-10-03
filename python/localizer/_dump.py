@@ -2,12 +2,17 @@
 # SPDX-License-Identifier: NCSA
 
 """LOCALIZER_DUMP: every help string of the command tree, with whether it was translated, written once
-per process as JSON in the same shape the Go runtime writes (for coverage reports)."""
+per process as JSON in the same shape the Go runtime writes (for coverage reports).
+
+As in the Go runtime, the file is created new (an existing one is never overwritten) and nothing is
+written when the process runs with privileges the user doesn't have, so the variable can't be used to
+clobber files."""
 
 from __future__ import annotations
 
 import inspect
 import json
+import os
 
 from . import _api
 from ._engine import Mode
@@ -20,14 +25,35 @@ def reset() -> None:
     _done.clear()
 
 
+def _privileged() -> bool:
+    """Root, or an effective user other than the real one (setuid). Windows has neither notion."""
+    geteuid = getattr(os, "geteuid", None)
+    getuid = getattr(os, "getuid", None)
+    if geteuid is None or getuid is None:
+        return False
+    euid = geteuid()
+    return euid == 0 or euid != getuid()
+
+
 def _write(entries: list[dict]) -> None:
     st = _api.state()
     if st is None or not st.dump:
         return
+    if _privileged():
+        _api.debugf("LOCALIZER_DUMP is ignored in a privileged process")
+        return
     doc = {"language": st.lang, "entries": entries}
-    with open(st.dump, "w", encoding="utf-8") as f:
-        json.dump(doc, f, ensure_ascii=False, indent=2)
-        f.write("\n")
+    data = (json.dumps(doc, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    try:
+        fd = os.open(st.dump, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+    except FileExistsError:
+        _api.debugf(f"LOCALIZER_DUMP: {st.dump} exists and is left as it is")
+        return
+    except OSError:
+        _api.debug_exc("dump")
+        return
+    with os.fdopen(fd, "wb") as f:
+        f.write(data)
 
 
 def _entry(entries: list[dict], kind: str, command: str, text, flag: str = "") -> None:
