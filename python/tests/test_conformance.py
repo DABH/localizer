@@ -4,13 +4,16 @@
 """Runs the vectors shared with the Go implementation (testdata/conformance)."""
 
 import pytest
+from conftest import CONFORMANCE
 
 from localizer import _format as fmt
+
+if not CONFORMANCE.is_dir():  # an sdist carries the tests but not the repository's corpus
+    pytest.skip("conformance corpus not present (run from a repository checkout)", allow_module_level=True)
 
 
 def _cases(name):
     import json
-    from conftest import CONFORMANCE
 
     with open(CONFORMANCE / name, encoding="utf-8") as f:
         data = json.load(f)
@@ -23,7 +26,7 @@ def test_placeholders(case):
     got = fmt.extract(case["source"])
     want = case["placeholders"]
     assert got.fields == sorted(want.get("fields", []))
-    assert got.backquoted == sorted(want.get("backquoted", []))
+    assert got.backquoted == want.get("backquoted", [])  # the first span first, then sorted
     assert got.tags == sorted(want.get("tags", []))
     if "translation" in case and "valid" in case:
         tr = case["translation"]
@@ -60,7 +63,6 @@ def test_pseudo(case):
 
 def _engine_cases():
     import json
-    from conftest import CONFORMANCE
 
     from localizer._engine import Engine, Mode
 
@@ -71,7 +73,12 @@ def _engine_cases():
     for g in data["groups"]:
         if g["syntax"] != "python":
             continue
-        engine = Engine.pseudo(g["catalog"]) if g.get("pseudo") else Engine("ja", g["catalog"])
+        if g.get("pseudo"):
+            engine = Engine.pseudo(g["catalog"])
+        elif "builtin" in g:
+            engine = Engine("ja", g["builtin"], g["catalog"])
+        else:
+            engine = Engine("ja", g["catalog"])
         for c in g["cases"]:
             out.append(pytest.param(engine, c["input"], modes[c["mode"]], c["want"], id=f"{g['name']}: {c['input'][:40]}"))
     return out

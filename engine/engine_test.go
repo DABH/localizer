@@ -149,6 +149,8 @@ func TestOnMiss(t *testing.T) {
 	}
 }
 
+// BenchmarkTranslate measures single lookups against a 10k-entry catalog with 1k format strings: an exact
+// hit, a reverse-matched format and a miss. Help mode is not memoized, so every iteration does the lookup.
 func BenchmarkTranslate(b *testing.B) {
 	cat := map[string]string{}
 	for i := 0; i < 10000; i++ {
@@ -158,10 +160,73 @@ func BenchmarkTranslate(b *testing.B) {
 		}
 	}
 	e := New("ja", cat)
-	inputs := []string{"Message number 42 about things.", "Created resource kind 990 named \"x\".", "some server data line that misses"}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		// Defeat the memo to measure raw lookups.
-		e.Translate(inputs[i%3]+strings.Repeat(" ", i%64), Output)
+	cases := []struct{ name, in, want string }{
+		{"exact", "Message number 42 about things.", "メッセージ 42。"},
+		{"pattern", "Created resource kind 990 named \"x\".", "種類 990 の \"x\" を作成しました。"},
+		{"miss", "some server data line that misses", "some server data line that misses"},
+	}
+	for _, c := range cases {
+		// Checks the inputs and compiles the patterns before anything is timed.
+		if got := e.Translate(c.in, Help); got != c.want {
+			b.Fatalf("%s: Translate = %q, want %q", c.name, got, c.want)
+		}
+	}
+	for _, c := range cases {
+		b.Run(c.name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				e.Translate(c.in, Help)
+			}
+		})
+	}
+}
+
+func TestMemoIsBoundedByBytes(t *testing.T) {
+	e := New("ja", ja)
+	long := strings.Repeat("x", maxMemoEntry+1)
+	e.Translate(long, Output)
+	if _, ok := e.memo[Output].Load(long); ok {
+		t.Error("a string longer than maxMemoEntry was memoized")
+	}
+	short := strings.Repeat("y", 100)
+	e.Translate(short, Output)
+	if _, ok := e.memo[Output].Load(short); !ok {
+		t.Error("a short string was not memoized")
+	}
+	if got := e.memoSize.Load(); got != 200 {
+		t.Errorf("memoSize = %d, want 200 (input + output bytes)", got)
+	}
+	// Once the budget is spent, nothing more is kept, and lookups still work.
+	e.memoSize.Store(maxMemoBytes)
+	other := "List Kafka clusters."
+	if got := e.Translate(other, Output); got != "Kafka クラスターを一覧表示します。" {
+		t.Errorf("translation with a full memo: %q", got)
+	}
+	if _, ok := e.memo[Output].Load(other); ok {
+		t.Error("memoized past the byte budget")
+	}
+}
+
+func TestTrimmedKeysAreDeterministic(t *testing.T) {
+	// Two whitespace variants of the same text: the smallest original key wins, whatever the map order.
+	for i := 0; i < 20; i++ {
+		e := New("ja", map[string]string{" Done": "A", "Done\n": "B", "Fine ": "C", "Fine": "D"})
+		if got := e.Translate("Done", Output); got != "A" {
+			t.Fatalf("variant choice = %q, want A (the smaller key)", got)
+		}
+		if got := e.Translate("Fine", Output); got != "D" {
+			t.Fatalf("exact key lost to a copy: %q", got)
+		}
+	}
+}
+
+func TestSuggestionLinesStayUntranslated(t *testing.T) {
+	e := New("ja", map[string]string{"status": "状態", "Did you mean this?": "もしかして:", "Error:": "エラー:"})
+	in := "Error: unknown\n\nDid you mean this?\n\tstatus\n"
+	if got := e.Translate(in, Error); got != "エラー: unknown\n\nもしかして:\n\tstatus\n" {
+		t.Errorf("got %q", got)
+	}
+	if got := e.Translate("status", Output); got != "状態" {
+		t.Errorf("standalone key: %q", got)
 	}
 }

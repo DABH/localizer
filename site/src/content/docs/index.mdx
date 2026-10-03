@@ -131,15 +131,15 @@ Command names, flags, placeholders and your users’ data stay exactly as they a
 	</Card>
 	<Card title="Always in sync" icon="code-branch">
 		When a push adds or changes strings, Localizer translates just those and updates one pull request.
-		Strings you delete are removed from the catalogs.
+		Strings you delete are removed from the catalogs, with a guard against dropping too many at once.
 	</Card>
 	<Card title="Safe by design" icon="approve-check">
 		Every translation is checked twice, by the service and again at runtime. Placeholders, flags and code
-		spans must survive intact, and output that isn’t yours is never touched.
+		spans must survive intact, and text that matches no catalog entry passes through unchanged.
 	</Card>
 	<Card title="Human edits win" icon="pencil">
-		Translations are plain JSON in your repository. Correct any entry in a pull request, and Localizer
-		never overwrites it.
+		Translations are plain JSON in your repository. Correct any entry, and Localizer keeps your version;
+		only an entry that fails validation is replaced.
 	</Card>
 	<Card title="No keys to leak" icon="padlock">
 		You authenticate through the GitHub App or your workflow’s short-lived OIDC token, so there is no

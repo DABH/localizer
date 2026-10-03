@@ -29,11 +29,12 @@ fuzz:
 bench:
 	$(GO) test -run '^$$' -bench . -benchmem . ./engine/
 
-# The Python runtime (python/, published as localizer-py). Needs uv.
+# The Python runtime (python/, published on PyPI as "localizer"). Needs uv.
 python:
 	cd python && uv run --with-editable . --with pytest --with typer --with click pytest -q
 
-# The documentation site (site/, Astro Starlight). `make site-dev` serves it at http://localhost:4321/localizer/.
+# The documentation site (site/, Astro Starlight; published at https://locale.dev). `make site-dev` serves it at
+# http://localhost:4321/.
 site:
 	cd site && npm ci && npm run build
 

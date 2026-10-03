@@ -13,6 +13,7 @@ typer = pytest.importorskip("typer")
 from typer.testing import CliRunner  # noqa: E402
 
 import localizer  # noqa: E402
+from localizer import _hooks_click  # noqa: E402
 
 JA = {
     "Usage:": "使い方:",
@@ -152,6 +153,14 @@ def run(app, *args, **kw):
     return CliRunner().invoke(app, list(args), **kw)
 
 
+def everything(result):
+    """stdout and stderr of a run (Click 8.1 mixes them into ``output``)."""
+    try:
+        return result.output + result.stderr
+    except ValueError:
+        return result.output
+
+
 def test_lazy_tree_and_markdown_help(locales):
     app = make_app()
     english_root = run(app, "--help").output
@@ -214,3 +223,56 @@ def test_cli_runner_without_localize_hooks_stays_english(locales):
     app = make_app()
     out = run(app, "--help").output
     assert "Snowflake CLI tool for developers" in out
+
+
+def test_translation_that_breaks_rich_markup_falls_back_to_english(locales, monkeypatch):
+    """A translation the catalog validation lets through but Rich rejects at render time (a reordered
+    tag) must not crash --help: the original renders, and LOCALIZER_DEBUG says why."""
+    app = typer.Typer(rich_markup_mode="rich")
+
+    @app.command()
+    def main(name: str = typer.Option("x", help="[bold]Name[/bold] of the thing.")):
+        """[bold]Manage[/bold] tasks."""
+
+    assert "Manage tasks." in run(app, "--help").output
+    localizer.localize(app, locales, language="ja")
+    broken = "[/bold]タスク[bold]を管理します。"
+    monkeypatch.setattr(_hooks_click, "_help", lambda s: broken if s == "[bold]Manage[/bold] tasks." else s)
+    monkeypatch.setenv("LOCALIZER_DEBUG", "1")
+    r = run(app, "--help")
+    assert r.exit_code == 0, everything(r)
+    assert "Manage tasks." in r.output and "タスク" not in r.output
+    assert "localizer: rich help: " in everything(r) and "MarkupError" in everything(r)
+
+
+def test_prompt_messages_of_the_bundled_click(locales):
+    """Typer's bundled Click has no gettext: the confirmation prompt and Click's own prompt errors
+    come from the built-in catalog through the hooks (with real Click, through gettext)."""
+    app = typer.Typer()
+
+    @app.command()
+    def main():
+        token = typer.prompt("Token", confirmation_prompt=True)
+        if typer.confirm("Are you sure?"):
+            typer.echo(token)
+
+    localizer.localize(app, locales, language="ja")
+    r = run(app, input="a\nb\na\na\nmaybe\ny\n")
+    assert r.exit_code == 0, everything(r)
+    assert "確認のため再入力してください: " in r.output and "Repeat for confirmation" not in r.output
+    assert "エラー: 入力された 2 つの値が一致しません。" in r.output
+    assert "本当によろしいですか? [y/N]: " in r.output
+    assert "エラー: 入力が無効です" in r.output and "invalid input" not in r.output
+    assert r.output.rstrip().endswith("\na")
+
+
+def test_english_after_a_language_leaves_typer_panels_english(locales):
+    rich_utils = pytest.importorskip("typer.rich_utils")
+    app = make_app()
+    english = run(app, "connection", "add", "--help").output
+    localizer.localize(app, locales, language="ja")
+    assert "オプション" in run(app, "connection", "add", "--help").output
+    assert rich_utils.OPTIONS_PANEL_TITLE == "Options"  # translated only while a render runs
+    assert localizer.localize(app, locales, language="en") == ""
+    assert run(app, "connection", "add", "--help").output == english
+    assert rich_utils.OPTIONS_PANEL_TITLE == "Options"

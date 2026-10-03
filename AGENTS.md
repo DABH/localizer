@@ -13,7 +13,8 @@ for agents: https://locale.dev/llms.txt.
 ## Integrating Localizer into a CLI (any repository)
 
 Follow the steps in order. Never hand-write translations: the service produces them once the repository is
-connected, and human edits to its catalogs are preserved.
+connected, and it keeps a human's edits to its catalogs as long as the entries stay valid (an entry that
+fails validation is replaced on the next run).
 
 ### 1. Identify the language and framework
 
@@ -108,7 +109,8 @@ translation happens when help and errors render.
 | A string | `localizer.T(s)` | `localizer.t(s)` |
 | A format string | `localizer.Sprintf(format, args...)`, `localizer.Errorf` | `localizer.tf(fmt, *args, **kwargs)` |
 | An error for display | `localizer.Error(err)` | `localizer.error(exc)` |
-| A stream / formatted text | `localizer.Writer(w)` | `localizer.translate(text, localizer.Mode.ERROR)` |
+| Formatted text at a chokepoint | `localizer.Translate(text, mode)` with `localizer.ModeOutput`, `ModeHelp` or `ModeError` | `localizer.translate(text, mode)` with `localizer.Mode.OUTPUT`, `HELP` or `ERROR` |
+| A stream | `localizer.Writer(w)` | — |
 
 Hook chokepoints, not call sites: the CLI's printing helpers (console wrappers, `echo` helpers), its
 error display, prompts, table headers. Call `T`/`t` on the format string **before** formatting (or use
@@ -171,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: DABH/localizer/action@v0.5.0
+      - uses: DABH/localizer/action@v0.5.2
 ```
 
 (and tell the user to enable **Settings → Actions → General → Allow GitHub Actions to create and approve

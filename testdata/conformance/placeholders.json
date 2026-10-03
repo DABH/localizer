@@ -371,6 +371,149 @@
       "translation": "タスクを追加します。",
       "placeholders": {},
       "valid": true
+    },
+    {
+      "name": "carriage return added",
+      "source": "Delete {name}?",
+      "translation": "{name} を削除しますか？\rいいえ",
+      "placeholders": {
+        "fields": [
+          "{name}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "carriage return kept from the source",
+      "source": "Line one\r\nLine two",
+      "translation": "一行目\r\n二行目",
+      "placeholders": {},
+      "valid": true
+    },
+    {
+      "name": "bidi isolate added",
+      "source": "Delete {name}?",
+      "translation": "⁧{name}⁩ を削除しますか？",
+      "placeholders": {
+        "fields": [
+          "{name}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "bidi override added",
+      "source": "Delete {name}?",
+      "translation": "‮{name} を削除しますか？",
+      "placeholders": {
+        "fields": [
+          "{name}"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "line separator added",
+      "source": "Deleted.",
+      "translation": "削除しました。 ",
+      "placeholders": {},
+      "valid": false
+    },
+    {
+      "name": "zero-width joiner is allowed",
+      "source": "Deleted.",
+      "translation": "حذف‍شد.",
+      "placeholders": {},
+      "valid": true
+    },
+    {
+      "name": "first backquoted span must stay first",
+      "source": "Cleanup `policy` to use, e.g. `delete`.",
+      "translation": "使用する `delete`（例: `policy`）。",
+      "placeholders": {
+        "backquoted": [
+          "`policy`",
+          "`delete`"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "later backquoted spans may move",
+      "source": "Use `a` before `b` or `c`.",
+      "translation": "`a` の後に `c` または `b` を使います。",
+      "placeholders": {
+        "backquoted": [
+          "`a`",
+          "`b`",
+          "`c`"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "reordered markup tags are unbalanced",
+      "source": "Use [bold]x[/bold] now.",
+      "translation": "[/bold]x[bold] を使う。",
+      "placeholders": {
+        "tags": [
+          "[/bold]",
+          "[bold]"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "markup tags may swap with their phrases",
+      "source": "[bold]A[/bold] and [red]B[/red]",
+      "translation": "[red]B[/red] と [bold]A[/bold]",
+      "placeholders": {
+        "tags": [
+          "[/bold]",
+          "[/red]",
+          "[bold]",
+          "[red]"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "closing tag with nothing open",
+      "source": "[bold]x[/bold]",
+      "translation": "x[/bold][bold]",
+      "placeholders": {
+        "tags": [
+          "[/bold]",
+          "[bold]"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "generic close closes the last tag",
+      "source": "[bold]x[/] and [red]y[/]",
+      "translation": "[red]y[/] と [bold]x[/]",
+      "placeholders": {
+        "tags": [
+          "[/]",
+          "[/]",
+          "[bold]",
+          "[red]"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "link tag closed by name",
+      "source": "See [link=https://x.example]docs[/link].",
+      "translation": "[link=https://x.example]ドキュメント[/link]を参照。",
+      "placeholders": {
+        "tags": [
+          "[/link]",
+          "[link=https://x.example]"
+        ]
+      },
+      "valid": true
     }
   ]
 }

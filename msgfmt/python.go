@@ -417,8 +417,8 @@ func (t Token) signature() string {
 var tagRe = regexp.MustCompile(`\\?\[(?:/|/?[a-z#@][^\[\]\n]*)\]`)
 
 // tags returns the markup a Python translation must keep: every "\[" escape, plus every tag when the
-// string contains a closing tag (a closing tag without an open one makes Rich raise). "[text](url)"
-// Markdown links are not tags.
+// string contains a closing tag, and "[/?]" when the closing tags don't balance the open ones (a
+// closing tag without a matching open one makes Rich raise). "[text](url)" Markdown links are not tags.
 func tags(s string) []string {
 	if !strings.Contains(s, "[") {
 		return nil
@@ -441,9 +441,50 @@ func tags(s string) []string {
 	}
 	if closing {
 		esc = append(esc, open...)
+		if !balancedTags(open) {
+			esc = append(esc, "[/?]")
+		}
 	}
 	sort.Strings(esc)
 	return esc
+}
+
+// balancedTags reports whether every closing tag closes an open one, the way Rich resolves them: "[/]"
+// closes the most recent open tag, "[/name]" the most recent open tag with that name ("[/link]" closes
+// "[link=…]").
+func balancedTags(toks []string) bool {
+	var stack []string
+	for _, tok := range toks {
+		if !strings.HasPrefix(tok, "[/") {
+			stack = append(stack, tagName(tok[1:len(tok)-1]))
+			continue
+		}
+		name := tagName(tok[2 : len(tok)-1])
+		if name == "" {
+			if len(stack) == 0 {
+				return false
+			}
+			stack = stack[:len(stack)-1]
+			continue
+		}
+		i := len(stack) - 1
+		for i >= 0 && stack[i] != name {
+			i--
+		}
+		if i < 0 {
+			return false
+		}
+		stack = append(stack[:i], stack[i+1:]...)
+	}
+	return true
+}
+
+// tagName is the part of a tag body that a closing tag refers to: "link" for "link=https://x".
+func tagName(body string) string {
+	if i := strings.IndexAny(body, "= "); i >= 0 {
+		return body[:i]
+	}
+	return body
 }
 
 // ExtractSyntax is Extract for the given syntax.
@@ -466,8 +507,7 @@ func ExtractSyntax(s string, syn Syntax) Placeholders {
 			sort.Strings(p.Verbs)
 		}
 	}
-	p.Backquoted = backquoted(s)
-	sort.Strings(p.Backquoted)
+	p.Backquoted = orderedSpans(backquoted(s))
 	p.Tags = tags(s)
 	return p
 }

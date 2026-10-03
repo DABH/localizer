@@ -387,6 +387,8 @@ _TAG = re.compile(r"\\?\[(?:/|/?[a-z#@][^\[\]\n]*)\]")
 
 
 def _tags(s: str) -> list[str]:
+    """The markup a translation must keep: every ``\\[`` escape, plus every tag when the string contains
+    a closing tag, and ``[/?]`` when the closing tags don't balance the open ones (Rich would raise)."""
     if "[" not in s:
         return []
     esc: list[str] = []
@@ -404,7 +406,39 @@ def _tags(s: str) -> list[str]:
         open_.append(tok)
     if closing:
         esc.extend(open_)
+        if not _balanced_tags(open_):
+            esc.append("[/?]")
     return sorted(esc)
+
+
+def _tag_name(body: str) -> str:
+    for i, c in enumerate(body):
+        if c in "= ":
+            return body[:i]
+    return body
+
+
+def _balanced_tags(toks: list[str]) -> bool:
+    """Whether every closing tag closes an open one the way Rich resolves them: ``[/]`` closes the most
+    recent open tag, ``[/name]`` the most recent open tag with that name."""
+    stack: list[str] = []
+    for tok in toks:
+        if not tok.startswith("[/"):
+            stack.append(_tag_name(tok[1:-1]))
+            continue
+        name = _tag_name(tok[2:-1])
+        if name == "":
+            if not stack:
+                return False
+            stack.pop()
+            continue
+        for i in range(len(stack) - 1, -1, -1):
+            if stack[i] == name:
+                del stack[i]
+                break
+        else:
+            return False
+    return True
 
 
 def _backquoted(s: str) -> list[str]:
@@ -421,13 +455,20 @@ def _backquoted(s: str) -> list[str]:
         s = s[j + 1 :]
 
 
+def _ordered_spans(spans: list[str]) -> list[str]:
+    """The first span stays first (a flag's value name), the rest are sorted."""
+    if len(spans) > 1:
+        return [spans[0]] + sorted(spans[1:])
+    return spans
+
+
 @dataclass(frozen=True)
 class Placeholders:
     """What a translation must carry over unchanged: field signatures, backquoted spans and markup."""
 
-    fields: list[str] = field(default_factory=list)
-    backquoted: list[str] = field(default_factory=list)
-    tags: list[str] = field(default_factory=list)
+    fields: list[str] = field(default_factory=list)  # signatures, sorted and de-duplicated
+    backquoted: list[str] = field(default_factory=list)  # the first span first, then the rest sorted
+    tags: list[str] = field(default_factory=list)  # sorted, with duplicates; "[/?]" marks unbalanced markup
 
     def diff(self, other: Placeholders) -> str:
         probs = []
@@ -447,17 +488,27 @@ def extract(s: str) -> Placeholders:
         toks, ok = parse(s)
         if ok:
             fields = sorted({t.signature() for t in toks if t.is_verb()})
-    return Placeholders(fields=fields, backquoted=sorted(_backquoted(s)), tags=_tags(s))
+    return Placeholders(fields=fields, backquoted=_ordered_spans(_backquoted(s)), tags=_tags(s))
+
+
+def _control(c: str) -> bool:
+    o = ord(c)
+    if o < 0x20:
+        return c not in "\n\t"
+    if o == 0x7F or 0x80 <= o < 0xA0:
+        return True
+    if 0x202A <= o <= 0x202E or 0x2066 <= o <= 0x2069:  # bidi embeddings, overrides, isolates
+        return True
+    if o in (0x2028, 0x2029, 0xFEFF):
+        return True
+    return 0xE0000 <= o <= 0xE007F  # tag characters
 
 
 def new_control_chars(src: str, dst: str) -> bool:
-    """Control characters (other than newline, tab, CR) or escape sequences in ``dst`` but not ``src``."""
-    for c in dst:
-        o = ord(c)
-        if (o < 0x20 and c not in "\n\t\r") or o == 0x7F or 0x80 <= o < 0xA0 or o in (0x202E, 0x202D):
-            if c not in src:
-                return True
-    return False
+    """Control characters (other than newline and tab), a carriage return the source lacks, escape
+    sequences, bidirectional controls, line separators, a byte order mark or tag characters in ``dst``
+    but not in ``src``."""
+    return any(_control(c) and c not in src for c in dst)
 
 
 _QUOTED = r"""'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|[^\n]+?"""

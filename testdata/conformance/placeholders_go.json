@@ -1,0 +1,173 @@
+{
+  "syntax": "go",
+  "description": "The Go placeholder grammar: fmt verbs (flags, width and precision included in the signature), text/template actions, backquoted spans and control characters. Same file format as placeholders.json; `fields` holds verb signatures \"arg:flagswidthprecverb\".",
+  "cases": [
+    {
+      "name": "positional verbs",
+      "source": "Created %s \"%s\".",
+      "translation": "%[1]s「\"%[2]s\"」を作成しました。",
+      "placeholders": {
+        "fields": [
+          "1:s",
+          "2:s"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "verb change is invalid",
+      "source": "bad translation %s",
+      "translation": "壊れた翻訳 %d",
+      "placeholders": {
+        "fields": [
+          "1:s"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "width change is invalid",
+      "source": "%-10s done",
+      "translation": "%-999999999s 完了",
+      "placeholders": {
+        "fields": [
+          "1:-10s"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "a repeated explicit index counts once",
+      "source": "%[1]s again",
+      "translation": "%[1]s、また %[1]s",
+      "placeholders": {
+        "fields": [
+          "1:s"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "a bare space flag is prose",
+      "source": "50% off",
+      "translation": "50 % Rabatt",
+      "placeholders": {},
+      "valid": true
+    },
+    {
+      "name": "prose next to a real verb",
+      "source": "Upload 100% complete for %s",
+      "translation": "%s のアップロードが 100% 完了",
+      "placeholders": {
+        "fields": [
+          "1:s"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "space flag with width is a verb",
+      "source": "value:% 5d",
+      "placeholders": {
+        "fields": [
+          "1: 5d"
+        ]
+      }
+    },
+    {
+      "name": "escaped percent",
+      "source": "100%% done",
+      "placeholders": {}
+    },
+    {
+      "name": "template action",
+      "source": "Usage: {{.CommandPath}} [flags]",
+      "translation": "使い方: {{.CommandPath}} [フラグ]",
+      "placeholders": {
+        "actions": [
+          "{{.CommandPath}}"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "unterminated action is invalid",
+      "source": "Flags:",
+      "translation": "フラグ {{",
+      "placeholders": {},
+      "valid": false
+    },
+    {
+      "name": "unterminated action in both",
+      "source": "Flags {{",
+      "translation": "フラグ {{",
+      "placeholders": {
+        "actions": [
+          "{{"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "first backquoted span must stay first",
+      "source": "Cleanup `policy` to use, e.g. `delete`.",
+      "translation": "使用する `delete`（例: `policy`）。",
+      "placeholders": {
+        "backquoted": [
+          "`policy`",
+          "`delete`"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "later backquoted spans may move",
+      "source": "Use `a` before `b` or `c`.",
+      "translation": "`a` の後に `c` または `b` を使います。",
+      "placeholders": {
+        "backquoted": [
+          "`a`",
+          "`b`",
+          "`c`"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "terminal escape added",
+      "source": "with escape",
+      "translation": "エスケープ\u001b[31m付き",
+      "placeholders": {},
+      "valid": false
+    },
+    {
+      "name": "carriage return added",
+      "source": "Delete %s?",
+      "translation": "%s を削除しますか？\rいいえ",
+      "placeholders": {
+        "fields": [
+          "1:s"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "bidi isolate added",
+      "source": "Delete %s?",
+      "translation": "⁧%s⁩ を削除しますか？",
+      "placeholders": {
+        "fields": [
+          "1:s"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "tag character added",
+      "source": "Deleted.",
+      "translation": "削除しました。󠁁",
+      "placeholders": {},
+      "valid": false
+    }
+  ]
+}

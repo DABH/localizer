@@ -24,7 +24,7 @@ var goldenPrefs = [][]string{
 	{"pt"}, {"pt-BR"}, {"pt-PT"}, {"pt-AO"},
 	{"ko"}, {"ko-KR"},
 	{"sr"}, {"sr-Latn"}, {"sr-Cyrl"}, {"sr-RS"}, {"sr-Latn-RS"}, {"sh"}, {"hr"}, {"bs"},
-	{"iw"}, {"he"}, {"in"}, {"id"}, {"tl"}, {"fil"}, {"no"}, {"nb"}, {"nn"},
+	{"iw"}, {"he"}, {"in"}, {"id"}, {"tl"}, {"fil"}, {"no"}, {"nb"}, {"nn"}, {"nn-NO"}, {"nn", "nb"}, {"nb-NO"},
 	{"not a tag"}, {""}, {"C"}, {"POSIX"}, {"ja_JP"}, {"JA-jp"}, {"zh-hant-tw"},
 }
 
@@ -35,6 +35,9 @@ var goldenAvailable = [][]string{
 	{"sr-Latn", "sr-Cyrl"},
 	{"en-GB", "fr"},
 	{"nb", "he"},
+	{"nb", "nn-NO"},
+	{"nb", "nn"},
+	{"nn"},
 }
 
 type goldenFile struct {

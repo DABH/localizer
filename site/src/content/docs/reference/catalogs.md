@@ -46,17 +46,26 @@ The runtime uses a translation only if it keeps everything a program depends on:
 - **Python:** the same `str.format` fields (`{name}`, `{0}`, `{title!r}`, `{x:>8}`) and printf-style verbs
   (`%s`, `%(name)s`, `%d`); named and numbered fields may be reordered, `{}` and `%s` may not; and the same
   Rich markup tags (`[bold]…[/]`) when the source has any;
-- the same backquoted spans. pflag shows the first backquoted word as a flag’s value name, so
-  `` `level` `` must stay `` `level` ``, and Typer/Click help shows them as code;
-- no control characters or terminal escape sequences that the source doesn’t have.
+- the same backquoted spans, with the first one first: pflag shows the first backquoted word as a flag’s
+  value name, so `` `level` `` must stay `` `level` `` and stay first, while later spans may move with the
+  sentence; Typer/Click help shows them as code;
+- for Python, balanced Rich markup: a closing tag must close a tag that is open at that point;
+- no control characters, terminal escape sequences, or characters that reorder or hide text (bidirectional
+  controls, line separators, tag characters) that the source doesn’t have; a carriage return only where the
+  source has one.
 
 An entry that breaks a rule is ignored, and the English source is printed instead. The service applies
-the same checks, plus a few stricter ones, before it proposes a translation.
+the same checks, plus a few stricter ones, before it proposes a translation, and an existing entry that
+fails them is translated again and replaced on the next sync.
 
 ## Editing translations
 
-Edit an entry directly and commit it, or suggest a change in the translations pull request. Localizer never
-overwrites an existing entry. To have an entry translated again, delete it, and the next sync fills it in.
+Edit an entry directly and commit it, or edit it on the `localizer-translations` branch of the translations
+pull request. Localizer keeps a valid entry wherever it finds it: only an entry that fails the checks above
+is replaced, while the files other than catalogs on that branch are rewritten on each run. Entries whose
+source string no longer appears in your code are removed, unless the extraction was incomplete or the
+removal would drop more than 20% of a catalog with more than 20 entries; then they are kept and the pull
+request says so. To have an entry translated again, delete it, and the next sync fills it in.
 
 ## Adding a language
 

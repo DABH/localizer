@@ -5,6 +5,7 @@ package localizer
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -28,8 +29,13 @@ type Dump struct {
 	Entries  []DumpEntry `json:"entries"`
 }
 
-// dumpTree records every help string in the tree (before translation) for coverage analysis.
+// dumpTree records every help string in the tree (before translation) for coverage analysis. The file
+// is created new (an existing one is never overwritten), and nothing is written when the process runs
+// with privileges the user doesn't have, so the variable can't be used to clobber files.
 func dumpTree(root *cobra.Command, path string, st *state) error {
+	if os.Geteuid() == 0 || os.Geteuid() != os.Getuid() {
+		return errors.New("LOCALIZER_DUMP is ignored in a privileged process")
+	}
 	d := Dump{Entries: []DumpEntry{}}
 	var eng *engine.Engine
 	if st != nil {
@@ -70,5 +76,13 @@ func dumpTree(root *cobra.Command, path string, st *state) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, append(data, '\n'), 0o644)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(append(data, '\n')); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
 }

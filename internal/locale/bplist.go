@@ -111,6 +111,9 @@ func (p *bplist) header(ref uint64) (kind byte, length uint64, payload uint64, e
 	return kind, info, payload, nil
 }
 
+// refs reads count object references starting at payload. Lengths come straight from the file, so every
+// check here and in str compares against the remaining payload by division rather than multiplying or
+// adding to the untrusted count, which could wrap around.
 func (p *bplist) refs(payload, count uint64) ([]uint64, error) {
 	size := uint64(p.refSize)
 	if count > (p.objEnd-payload)/size {
@@ -141,6 +144,11 @@ func (p *bplist) dictValue(ref uint64, key string) (uint64, error) {
 		return noRef, err
 	}
 	if kind != 0xD {
+		return noRef, errBadPlist
+	}
+	// n key refs then n value refs follow. Bound n before doubling it: a count near 2^63 would wrap 2*n
+	// to a small number that refs accepts, and all[i] below would then index past the slice.
+	if n > (p.objEnd-payload)/(2*uint64(p.refSize)) {
 		return noRef, errBadPlist
 	}
 	all, err := p.refs(payload, 2*n)

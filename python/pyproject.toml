@@ -38,6 +38,10 @@ Changelog = "https://github.com/DABH/localizer/releases"
 [project.optional-dependencies]
 test = ["pytest>=8"]
 
+# `uv run pytest -q` in this directory: the frameworks the hooks are tested against.
+[dependency-groups]
+dev = ["pytest>=8", "typer>=0.17", "click>=8.1", "rich"]
+
 [tool.hatch.version]
 source = "vcs"
 raw-options = { root = "..", local_scheme = "no-local-version" }

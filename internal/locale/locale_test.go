@@ -4,6 +4,7 @@
 package locale
 
 import (
+	"encoding/binary"
 	"os"
 	"reflect"
 	"testing"
@@ -88,6 +89,9 @@ func TestMatch(t *testing.T) {
 	}
 }
 
+// testdataLanguages is the AppleLanguages array in testdata/GlobalPreferences.plist.
+var testdataLanguages = []string{"ja-JP", "zh-Hans-CN", "en-US", "Français-ünicode"}
+
 func TestAppleLanguages(t *testing.T) {
 	data, err := os.ReadFile("testdata/GlobalPreferences.plist")
 	if err != nil {
@@ -97,9 +101,8 @@ func TestAppleLanguages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"ja-JP", "zh-Hans-CN", "en-US", "Français-ünicode"}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("appleLanguages = %q, want %q", got, want)
+	if !reflect.DeepEqual(got, testdataLanguages) {
+		t.Errorf("appleLanguages = %q, want %q", got, testdataLanguages)
 	}
 	// Corrupt inputs must fail cleanly, never panic.
 	for i := 0; i < len(data); i++ {
@@ -114,11 +117,65 @@ func TestAppleLanguages(t *testing.T) {
 			t.Errorf("expected error for %q", c)
 		}
 	}
+	// A minimal hand-assembled plist decodes, so the hostile ones below fail for the intended reason.
+	minimal := craftPlist(1, dictAppleLanguages, asciiAppleLanguages, []byte{0xA1, 0x03}, []byte{0x52, 'j', 'a'})
+	if got, err := appleLanguages(minimal); err != nil || !reflect.DeepEqual(got, []string{"ja"}) {
+		t.Fatalf("crafted plist: appleLanguages = %q, %v", got, err)
+	}
+	for _, tt := range hostilePlists {
+		got, err := appleLanguages(tt.data)
+		if (err != nil) != tt.wantErr || len(got) != 0 {
+			t.Errorf("%s: appleLanguages = %q, %v; want error %v", tt.name, got, err, tt.wantErr)
+		}
+	}
+}
+
+// Objects for craftPlist, encoded with one-byte references: a one-entry dictionary whose key is object 1
+// and whose value is object 2, and the ASCII string "AppleLanguages".
+var (
+	dictAppleLanguages  = []byte{0xD1, 0x01, 0x02}
+	asciiAppleLanguages = append([]byte{0x5E}, "AppleLanguages"...)
+)
+
+// hostilePlists are well-formed up to one object whose count or length, an untrusted 64-bit integer,
+// overflows naive arithmetic. The first one used to crash every CLI at startup: 2*n wrapped to 0, refs
+// returned an empty slice and dictValue indexed it.
+var hostilePlists = []struct {
+	name    string
+	data    []byte
+	wantErr bool
+}{
+	{"dict count 2^63", craftPlist(1, []byte{0xDF, 0x13, 0x80, 0, 0, 0, 0, 0, 0, 0}), true},
+	{"dict count 2^63+1 followed by two refs", craftPlist(1, []byte{0xDF, 0x13, 0x80, 0, 0, 0, 0, 0, 0, 1, 0, 0}), true},
+	{"dict count 2^64-1", craftPlist(1, []byte{0xDF, 0x13, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}), true},
+	{"dict count 2^60 with 8-byte refs", craftPlist(8, []byte{0xDF, 0x13, 0x10, 0, 0, 0, 0, 0, 0, 0}), true},
+	{"array count 2^63", craftPlist(1, dictAppleLanguages, asciiAppleLanguages, []byte{0xAF, 0x13, 0x80, 0, 0, 0, 0, 0, 0, 0}), true},
+	{"ascii string length 2^64-1", craftPlist(1, dictAppleLanguages, asciiAppleLanguages, []byte{0xA1, 0x03}, []byte{0x5F, 0x13, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}), false},
+	{"utf-16 string length 2^63", craftPlist(1, dictAppleLanguages, asciiAppleLanguages, []byte{0xA1, 0x03}, []byte{0x6F, 0x13, 0x80, 0, 0, 0, 0, 0, 0, 0}), false},
+}
+
+// craftPlist assembles a binary plist from hand-encoded objects, object 0 being the top object. Offsets
+// are one byte wide (the objects must fit in 247 bytes); references are refSize bytes wide.
+func craftPlist(refSize byte, objects ...[]byte) []byte {
+	b := []byte("bplist00")
+	var table []byte
+	for _, o := range objects {
+		table = append(table, byte(len(b)))
+		b = append(b, o...)
+	}
+	trailer := make([]byte, 32)
+	trailer[6], trailer[7] = 1, refSize
+	binary.BigEndian.PutUint64(trailer[8:], uint64(len(objects)))
+	binary.BigEndian.PutUint64(trailer[24:], uint64(len(b)))
+	return append(append(b, table...), trailer...)
 }
 
 func FuzzAppleLanguages(f *testing.F) {
 	if data, err := os.ReadFile("testdata/GlobalPreferences.plist"); err == nil {
 		f.Add(data)
+	}
+	for _, tt := range hostilePlists {
+		f.Add(tt.data)
 	}
 	f.Fuzz(func(t *testing.T, data []byte) { _, _ = appleLanguages(data) })
 }
