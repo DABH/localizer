@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: DABH/localizer/action@v0.5.2
+      - uses: DABH/localizer/action@v0.6.0
 ```
 
 Also enable **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**.
