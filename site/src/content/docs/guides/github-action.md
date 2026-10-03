@@ -37,7 +37,7 @@ The service accepts workflows from GitHub accounts with a subscription: see [Pri
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v7
-         - uses: DABH/localizer/action@v0.5.2
+         - uses: DABH/localizer/action@v0.6.0
    ```
 
 2. Turn on **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and
