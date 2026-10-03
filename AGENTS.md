@@ -19,6 +19,10 @@ fails validation is replaced on the next run).
 ### 1. Identify the language and framework
 
 - **Go + Cobra** (`github.com/spf13/cobra` in `go.mod`): one line, `localizer.Localize(root, locales.FS)`.
+- **Go + kong** (`github.com/alecthomas/kong`): one extra argument, `kong.Parse(&cli, kongx.Localize(locales.FS))`
+  (package `github.com/DABH/localizer/kongx`; also on `kong.Must` and `kong.New`, after any `kong.Writers`).
+- **Go + urfave/cli v3** (`github.com/urfave/cli/v3`): one line, `urfave.Localize(cmd, locales.FS)` on the root
+  command right before `cmd.Run` (package `github.com/DABH/localizer/urfave`). v2 (`cli.App`) is not supported.
 - **Python + Typer, Click or argparse** (`pyproject.toml`, `setup.py` or `setup.cfg`): one line,
   `localizer.localize(app, "yourcli.locales")`.
 - Other Go or Python CLIs: `localizer.Init(locales.FS)` / `localizer.init("yourcli.locales")` plus the
@@ -82,6 +86,15 @@ func main() {
 		os.Exit(1)
 	}
 }
+```
+
+```go
+// kong: the option goes last, after kong.Writers if you set it
+ctx := kong.Parse(&cli, kong.Name("yourcli"), kongx.Localize(locales.FS, localizer.WithEnvVar("YOURCLI_LANG")))
+
+// urfave/cli v3: right before Run, on the root command
+urfave.Localize(cmd, locales.FS, localizer.WithEnvVar("YOURCLI_LANG"))
+err := cmd.Run(context.Background(), os.Args)
 ```
 
 ```python

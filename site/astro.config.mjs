@@ -32,7 +32,7 @@ export default defineConfig({
 				{ label: 'Start here', items: ['getting-started', 'how-it-works', 'pricing', 'agents'] },
 				{
 					label: 'Guides',
-					items: ['guides/integration', 'guides/github-action', 'guides/github-app', 'guides/testing'],
+					items: ['guides/integration', 'guides/kong', 'guides/urfave', 'guides/github-action', 'guides/github-app', 'guides/testing'],
 				},
 				{ label: 'Reference', items: ['reference/configuration', 'reference/catalogs', 'reference/runtime'] },
 				{ label: 'More', items: ['security', 'faq'] },

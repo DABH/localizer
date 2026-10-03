@@ -43,8 +43,8 @@ When you push to your default branch, Localizer:
 1. **Downloads the source** of your public repository at that commit. Only source files (`.go`, `.py`),
    project files (`go.mod`, `pyproject.toml`, `setup.py`, `setup.cfg`), the configuration and the catalogs
    are unpacked, in memory. Your code is never built, imported or run, and it isn’t kept after the job.
-2. **Extracts user-facing strings** by statically analyzing your code. For Go it collects Cobra commands
-   and flags; `fmt`, `errors` and `log` messages; `localizer.T` calls; message-like struct fields; and the
+2. **Extracts user-facing strings** by statically analyzing your code. For Go it collects Cobra, kong and
+   urfave/cli commands and flags; `fmt`, `errors` and `log` messages; `localizer.T` calls; message-like struct fields; and the
    output helpers, struct fields and struct tags (such as table headers) that you list in
    [`.localizer.yml`](../reference/configuration/). For Python it collects Typer, Click and argparse
    definitions and command docstrings, output and prompt calls, exception messages, `localizer.t` calls and

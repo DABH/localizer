@@ -4,7 +4,7 @@
 Localizer renders a CLI's own strings (help text, flag descriptions, messages, errors, prompts) in the
 user's language. Translations are produced by AI, kept in sync automatically through pull requests, and
 shipped inside your binary or package. Localization adds no network calls and no noticeable startup cost.
-Go with Cobra; Python with Typer, Click or argparse.
+Go with Cobra, kong or urfave/cli; Python with Typer, Click or argparse.
 
 **Documentation: https://locale.dev/** · **Coding agents: [AGENTS.md](AGENTS.md)**
 
@@ -22,6 +22,9 @@ func main() {
 	}
 }
 ```
+
+kong: `kong.Parse(&cli, kongx.Localize(locales.FS))` (package `github.com/DABH/localizer/kongx`).
+urfave/cli v3: `urfave.Localize(cmd, locales.FS)` right before `cmd.Run` (package `github.com/DABH/localizer/urfave`).
 
 ```python
 import localizer  # pip install localizer
@@ -67,9 +70,10 @@ fails that check is replaced, and entries whose source string is gone are remove
 
 With the one line above: every command's description, help and deprecation text, all flag and option
 descriptions, help and usage headings, the framework's built-in commands and messages (Cobra's `help` and
-`completion`, Click's and Typer's `Show this message and exit.`, `[default: …]`, argparse's
-`positional arguments`, …), shell-completion descriptions, prompts, and the errors the framework prints
-(unknown commands and flags, missing arguments, invalid values, …).
+`completion`, kong's `Show context-sensitive help.`, urfave/cli's `help` command, Click's and Typer's
+`Show this message and exit.`, `[default: …]`, argparse's `positional arguments`, …), shell-completion
+descriptions, prompts, and the errors the framework prints (unknown commands and flags, missing arguments,
+invalid values, …).
 
 Your own runtime messages go through a few helpers at your output chokepoints:
 
@@ -99,7 +103,7 @@ is handy for spotting strings that don't go through Localizer yet.
 ## Try it
 
 ```sh
-# Go (Cobra)
+# Go (Cobra; kong and urfave/cli demos live in examples/kong-demo and examples/urfave-demo)
 go run ./examples/demo --help
 LANG=ja_JP.UTF-8 go run ./examples/demo add --help
 LOCALIZER_LANG=qps go run ./examples/demo --help
@@ -114,13 +118,14 @@ LANG=de_DE.UTF-8 uv run taskctl done 9
 
 | Path | What |
 | --- | --- |
-| `/` | The Go runtime library: the only package a Go CLI imports. Dependencies: cobra, pflag, x/text, x/sys. |
+| `/` | The Go runtime library and its Cobra integration: the only package a Cobra CLI imports. Dependencies: cobra, pflag, x/text, x/sys. |
+| `kongx/`, `urfave/` | The kong and urfave/cli v3 integrations (each imports its framework; a CLI imports the one it uses). |
 | `catalog/`, `engine/`, `msgfmt/` | Catalog format, lookup engine, and placeholder grammar (Go and Python), exported for tools. |
 | `internal/` | Locale detection, and built-in translations of the supported frameworks' own strings (one directory per framework). |
 | `python/` | The Python runtime, published to PyPI as `localizer`, with its tests and a Typer demo (`python/alias/` is a compatibility distribution). |
 | `testdata/conformance/` | The shared specification and test vectors both runtimes must satisfy. |
 | `action/` | The GitHub Action. |
-| `examples/demo/` | A small Cobra CLI that uses Localizer. |
+| `examples/demo/`, `examples/kong-demo/`, `examples/urfave-demo/` | Small Cobra, kong and urfave/cli CLIs that use Localizer. |
 | `site/` | The documentation site, published at https://locale.dev. |
 
 ## Security

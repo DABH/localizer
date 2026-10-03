@@ -47,6 +47,10 @@ The one line translates:
 - the help, usage and version templates;
 - Cobra’s `help` and `completion` commands, and shell completion descriptions;
 - the errors Cobra prints: unknown commands and flags, argument counts, required flags and flag groups.
+
+For a [kong](../kong/) application the integration is one extra argument,
+`kong.Parse(&cli, kongx.Localize(locales.FS))`; for [urfave/cli v3](../urfave/) it is
+`urfave.Localize(cmd, locales.FS)` right before `cmd.Run`. Each guide says what its one line translates.
 </TabItem>
 <TabItem label="Python (Typer, Click, argparse)">
 ```python
@@ -126,7 +130,7 @@ Most CLIs print through a handful of helpers, so hook those instead of every cal
 - its "Suggestions:" block;
 - its "REQUIRED:" flag label.
 
-For a CLI that doesn’t use Cobra, call `localizer.Init(locales.FS)` once at startup and use the helpers.
+For a CLI built with another framework, call `localizer.Init(locales.FS)` once at startup and use the helpers.
 </TabItem>
 <TabItem label="Python">
 | Helper | Use |
