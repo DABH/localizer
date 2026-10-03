@@ -138,3 +138,13 @@ jobs:
         with:
           go-version: "1.25"
       - run: go vet ./... && go test ./...
+
+  # One check that stands for the whole workflow, for the branch ruleset and auto-merge: green only when
+  # every job above succeeded or was skipped by design (the weekly fuzz job on pull requests); a failed or
+  # cancelled job turns it red.
+  ci-ok:
+    if: always()
+    needs: [test, fuzz, lint, python, cla-script, cobra-compat, min-go]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ toJSON(needs) }}' | jq -e 'all(.[]; .result == "success" or .result == "skipped")' > /dev/null

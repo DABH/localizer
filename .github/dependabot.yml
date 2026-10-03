@@ -5,6 +5,11 @@ updates:
     directory: /
     schedule: { interval: weekly }
     groups: { go: { patterns: ["*"] } }
+    ignore:
+      # The x/ modules raise the module's minimum Go version with every minor release; those bumps are
+      # made by hand together with the go directive (see CONTRIBUTING).
+      - dependency-name: "golang.org/x/*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
   - package-ecosystem: pip
     directory: /python
     schedule: { interval: weekly }
