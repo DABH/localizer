@@ -44,8 +44,11 @@ def _write(entries: list[dict]) -> None:
         return
     doc = {"language": st.lang, "entries": entries}
     data = (json.dumps(doc, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    for name in ("O_CLOEXEC", "O_BINARY", "O_NOINHERIT"):  # binary: no line-ending translation on Windows
+        flags |= getattr(os, name, 0)
     try:
-        fd = os.open(st.dump, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+        fd = os.open(st.dump, flags, 0o644)
     except FileExistsError:
         _api.debugf(f"LOCALIZER_DUMP: {st.dump} exists and is left as it is")
         return

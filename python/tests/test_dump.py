@@ -42,7 +42,7 @@ def test_dump_is_written_as_the_go_runtime_writes_it(locales, tmp_path, monkeypa
     monkeypatch.setenv("LOCALIZER_DUMP", str(dump))
     localizer.localize(make_parser(), locales, language="ja")
     raw = dump.read_bytes()
-    assert raw.endswith(b"}\n") and b"\\u" not in raw  # raw UTF-8, two-space indent, trailing newline
+    assert raw.endswith(b"}\n") and b"\r" not in raw and b"\\u" not in raw  # raw UTF-8, LF only, trailing newline
     doc = json.loads(raw)
     assert doc["language"] == "ja"
     flags = {e["flag"]: e["translated"] for e in doc["entries"] if e["kind"] == "flag"}

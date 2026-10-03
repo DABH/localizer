@@ -146,9 +146,13 @@ def _plist_languages(path: str) -> list[str]:
     ``_MAX_PLIST``, or is malformed. This runs at every CLI startup, so it must neither block nor fail; the
     worst outcome is English. As in the Go runtime, the open is non-blocking (a FIFO without a writer
     returns at once; regular files are unaffected) and the checks run on the open descriptor, so nothing
-    can be swapped in between them and the read."""
+    can be swapped in between them and the read. On Windows the descriptor must be binary (the C runtime
+    would otherwise translate line endings and stop at a Ctrl-Z byte) and not inherited."""
+    flags = os.O_RDONLY
+    for name in ("O_NONBLOCK", "O_CLOEXEC", "O_BINARY", "O_NOINHERIT"):
+        flags |= getattr(os, name, 0)
     try:
-        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0))
+        fd = os.open(path, flags)
     except OSError:
         return []
     try:
