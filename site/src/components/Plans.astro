@@ -45,8 +45,8 @@ const plans = [
 			'60,000 translations per month',
 			'All public repositories of one account',
 			'99.9% uptime SLA with service credits',
-			'Support answered within one business day',
-			'Security questionnaire and DPA on request',
+			'Support: first response within one business day',
+			'Security questionnaire on request',
 		],
 	},
 ];
@@ -67,7 +67,7 @@ const plans = [
 <div class="plans">
 	{plans.map((p) => (
 		<section class="plan" data-plan={p.key} data-product={p.product} data-personal-only={p.personalOnly ? 'true' : 'false'}>
-			<h3>{p.name}</h3>
+			<h2>{p.name}</h2>
 			<p class="price"><span>{p.price}</span> / month</p>
 			<p class="who">{p.who}</p>
 			<ul>{p.features.map((f) => <li>{f}</li>)}</ul>
@@ -76,7 +76,7 @@ const plans = [
 	))}
 	<section class="plan custom">
 		<div>
-			<h3>Custom</h3>
+			<h2>Custom</h2>
 			<p class="who">
 				For large organizations: annual contracts and invoicing, an allowance and terms to fit, and help
 				with security reviews and procurement.
@@ -197,6 +197,11 @@ const plans = [
 	:root[data-theme='light'] .subscribe.ready {
 		color: #fff;
 	}
+	/* White on the dark theme's accent (#6366f1) is 4.47:1; the light theme's accent gives 6.3:1. */
+	:root:not([data-theme='light']) .account button,
+	:root:not([data-theme='light']) .subscribe.ready {
+		background: #4f46e5;
+	}
 	.account-status {
 		margin-top: 0.5rem;
 		color: var(--sl-color-gray-2);
@@ -217,8 +222,10 @@ const plans = [
 		border-radius: 0.75rem;
 		background: var(--sl-color-gray-7, var(--sl-color-black));
 	}
-	.plan h3 {
+	.plan h2 {
+		/* Plan names sit right under the page title, so they are H2s, styled like H3s. */
 		margin: 0;
+		font-size: var(--sl-text-h3);
 	}
 	.plan .price {
 		margin: 0.5rem 0 0;

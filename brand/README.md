@@ -22,3 +22,6 @@ rsvg-convert -w 180 -h 180 brand/avatar.svg -o site/public/apple-touch-icon.png
 rsvg-convert -w 32 -h 32 brand/logo.svg -o site/public/favicon-32.png
 cp brand/logo.svg site/src/assets/logo.svg && cp brand/logo.svg site/public/favicon.svg
 ```
+
+The social image (`site/public/og.png`) and the ICO favicon (`site/public/favicon.ico`) are made from these
+PNGs by `uv run --with pillow python site/scripts/images.py`.

@@ -12,6 +12,11 @@ For a language other than English, one catalog is decoded at startup: a few mill
 thousands of strings; the Python runtime also installs its hooks then (about 10 ms in all) and costs about
 25 ms to import (Python 3.13 on a recent laptop). Help is translated only when it’s shown.
 
+## How big are the catalogs?
+
+Roughly 0.5 MB of JSON per language for every 3,700 strings or so. The Confluent CLI fork’s seven
+catalogs total about 3.5 MB, about 4% of its binary; a Python wheel grows by the same JSON.
+
 ## Does it make network calls or collect data?
 
 No. Translations are compiled into your binary or shipped inside your package. The runtime never connects
@@ -46,12 +51,33 @@ commands registered after `localize` — plugins attached by an eager callback, 
 are covered, and code that compares your original objects’ attributes keeps working. In Go, call
 `Localize` on each root you build.
 
+## Can I use it on a monorepo with several CLIs?
+
+A repository has one `.localizer.yml` and one locales directory today, so several CLIs in one repository
+share one set of catalogs, and they must be in the same language (Go or Python). Separate configurations
+per directory aren’t supported yet.
+
 ## How good are the translations? Can I fix one?
 
 Translations are made by Claude, with the string’s context, your glossary and a per-language style guide.
 Every translation is validated before it’s proposed, and you review each pull request. To fix one, edit the
 catalog entry. Localizer keeps it as long as it is valid (same placeholders as the source, no new control
 characters); an entry that fails that check is replaced on the next run.
+
+## Which model translates?
+
+Claude, through Amazon Bedrock. The body of each translations pull request names the model that produced
+it.
+
+## How do I retranslate after changing the glossary or the style?
+
+Delete the entries you want redone from the catalogs and push: a valid entry is never retranslated on its
+own, so a new glossary term or style rule applies only to new strings and to the entries you delete.
+
+## How long does the first pull request take?
+
+Minutes for a small CLI. A large first run continues across several jobs, each updating the same pull
+request.
 
 ## What if my CLI uses none of these frameworks?
 
@@ -73,3 +99,15 @@ code, you can maintain catalogs yourself; the runtime library works the same way
 The runtime library is free and open source under the University of Illinois/NCSA Open Source License.
 The hosted translation service is a monthly subscription for the GitHub account that owns your
 repositories: Solo ($12), Team ($39) and Enterprise ($199), or a custom contract. See [Pricing](/pricing/).
+
+## Is there a trial?
+
+No. Solo is month to month, and if you cancel within 14 days of your first purchase, email us and we refund
+that charge (see the [Terms of Service](/terms/)).
+
+## What happens when I cancel?
+
+Your catalogs and pull requests stay in your repository, and the runtime keeps working: nothing in your CLI
+changes. The service stops opening and updating pull requests at the end of the period you paid for, and
+deletes its copy of your repository’s translation memory 30 days later (see the
+[Privacy Policy](/privacy/)).

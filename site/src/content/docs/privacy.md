@@ -2,9 +2,10 @@
 title: Privacy Policy
 description: What data Localizer's website, service and runtime libraries collect, and why.
 tableOfContents: false
+editUrl: false
 ---
 
-_Last updated: September 28, 2026_
+_Last updated: October 2, 2026_
 
 This policy explains what data Localizer collects and why. Localizer is operated by **Snizyx Software
 LLC**, a Wyoming limited liability company ("**we**", "**us**"). Contact us at
@@ -34,8 +35,9 @@ When you connect a repository with the GitHub App or the GitHub Action, we proce
 - **Source code:** the public source code of the repository at that commit. It is downloaded into memory,
   used to find the strings your tool shows to its users, and discarded when the job ends. We don't store it.
 - **Strings and translations:** the extracted strings and their translations, kept as a translation memory
-  per repository, so the same string is never translated and paid for twice within a repository. To have it
-  deleted, email us.
+  per repository, so the same string is never translated and paid for twice within a repository. A
+  repository's translation memory and job records are deleted 30 days after the GitHub App is uninstalled
+  from it or the subscription ends, or earlier if you ask us.
 - **Job records and usage:** the outcome of each job (status, counts, cost), kept for 90 days, and monthly usage
   counters.
 - **GitHub Action results:** the files returned to your workflow, kept encrypted for at most 7 days.
@@ -82,7 +84,9 @@ us to.
 
 ## Where it is stored
 
-Data is stored and processed in the United States. Our databases are encrypted and backed up; deleted records
+Data is stored and processed in the United States. For customers in the EU and the UK, transfers are covered
+by the EU Standard Contractual Clauses and the UK Addendum, incorporated in our Data Processing Agreement,
+which is available to any paid plan on request. Our databases are encrypted and backed up; deleted records
 can remain in backups for up to 35 days.
 
 ## Your rights

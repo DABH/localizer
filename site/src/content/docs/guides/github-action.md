@@ -20,13 +20,17 @@ The service accepts workflows from GitHub accounts with a subscription: see [Pri
    name: Localizer
    on:
      push:
-       branches: [main]
+       branches: [main]    # your default branch
      workflow_dispatch:
 
    permissions:
      contents: write       # push the translations branch
      pull-requests: write  # open the pull request
      id-token: write       # authenticate to Localizer with an OIDC token
+
+   concurrency:
+     group: localizer      # one run at a time: a second push waits for the first
+     cancel-in-progress: false
 
    jobs:
      translations:
@@ -37,7 +41,8 @@ The service accepts workflows from GitHub accounts with a subscription: see [Pri
    ```
 
 2. Turn on **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and
-   approve pull requests**.
+   approve pull requests**. In an organization-owned repository, the organization’s own Actions settings
+   must allow it as well, or the repository setting can’t be turned on.
 
 3. Push, or run the workflow from the **Actions** tab. The first run opens the onboarding pull request.
 

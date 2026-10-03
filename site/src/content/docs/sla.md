@@ -2,9 +2,10 @@
 title: Enterprise SLA and support
 description: Localizer's uptime commitment, service credits and support response times for Enterprise plans.
 tableOfContents: false
+editUrl: false
 ---
 
-_Last updated: September 28, 2026_
+_Last updated: October 2, 2026_
 
 This service level agreement (**SLA**) applies to Enterprise subscriptions to the hosted Localizer service,
 and to Custom agreements that refer to it. It is part of the [Terms of Service](/terms/).
@@ -54,8 +55,9 @@ Requests on other plans are answered as soon as we can.
 
 ## Security reviews
 
-For Enterprise and Custom customers, we complete your security questionnaire and provide a data processing
-agreement on request. Our security model is described in [Security](/security/).
+For Enterprise and Custom customers, we complete your security questionnaire on request. A data processing
+agreement, with the EU Standard Contractual Clauses and the UK Addendum, is available to any paid plan on
+request. Our security model is described in [Security](/security/).
 
 ## Changes
 

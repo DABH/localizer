@@ -4,8 +4,8 @@ description: Let Claude Code, Codex or another coding agent integrate Localizer 
 ---
 
 Localizer's integration instructions are written for coding agents as well as people:
-[`AGENTS.md`](https://locale.dev/AGENTS.md), the `AGENTS.md` at the root of the repository. It walks
-through detecting the language and framework, adding the dependency, creating the locales package, adding
+[`AGENTS.md`](https://locale.dev/AGENTS.md), published from the root of the repository. It walks through
+detecting the language and framework, adding the dependency, creating the locales package, adding
 the one line, hooking the CLI's own output helpers, pinning tests to English, verifying with
 pseudo-localization, and connecting the repository. An index of these pages for agents is at
 [`llms.txt`](https://locale.dev/llms.txt).
