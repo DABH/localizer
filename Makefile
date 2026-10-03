@@ -31,7 +31,7 @@ bench:
 
 # The Python runtime (python/, published on PyPI as "localizer"). Needs uv.
 python:
-	cd python && uv run --with-editable . --with pytest --with typer --with click pytest -q
+	cd python && uv run --with-editable . --with pytest --with typer --with click --with rich-click pytest -q
 
 # The documentation site (site/, Astro Starlight; published at https://locale.dev). `make site-dev` serves it at
 # http://localhost:4321/.
