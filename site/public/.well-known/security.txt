@@ -1,0 +1,5 @@
+Contact: https://github.com/DABH/localizer/security/advisories/new
+Expires: 2027-10-02T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://locale.dev/.well-known/security.txt
+Policy: https://locale.dev/security/

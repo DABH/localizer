@@ -2,9 +2,10 @@
 title: Terms of Service
 description: The terms for using Localizer's hosted service.
 tableOfContents: false
+editUrl: false
 ---
 
-_Last updated: September 28, 2026_
+_Last updated: October 2, 2026_
 
 These terms govern the hosted Localizer service (the **Service**): the Localizer GitHub App, the API at
 `api.locale.dev` that the Localizer GitHub Action calls, and the translations they produce. The Service is
@@ -38,15 +39,15 @@ repositories that account owns. The plans are described on the [pricing page](/p
 
 - **Solo** may only be bought for the personal GitHub account of an individual, and only covers
   repositories that account owns.
-- **Team** may only be used by organizations that, together with their affiliates, have fewer than 100
-  employees.
-- **Enterprise** may be used by organizations of any size and includes the commitments in the
-  [SLA](/sla/).
+- **Team** may be bought for a personal account, or for an organization that, together with its affiliates,
+  has fewer than 100 employees.
+- **Enterprise** may be bought for a personal account or for an organization of any size, and includes the
+  commitments in the [SLA](/sla/).
 - **Custom** agreements are made in writing with us; where they differ from these terms, the written
   agreement applies.
 
 If you no longer qualify for your plan, for example because your organization has grown to 100 employees or
-more, you must move to a plan you qualify for by your next renewal.
+more, you must move to a plan you qualify for (Enterprise or Custom) by your next renewal.
 
 Each plan includes a number of translations per month. One translation is one string translated into one
 language. Allowances reset on the first day of each calendar month (UTC) and unused translations don't roll
@@ -62,7 +63,9 @@ portal where you can change or cancel your plan. Polar's own terms apply to the 
 
 Subscriptions renew every month until canceled. A cancellation takes effect at the end of the period you have
 paid for, and the Service keeps working until then. Payments are not refundable for partial periods, except
-where the law requires otherwise or under the [SLA](/sla/).
+where the law requires otherwise or under the [SLA](/sla/). If you cancel within 14 days of your first
+purchase, email us and we will refund that charge through Polar. Statutory withdrawal rights of consumers in
+the EU and UK are not affected.
 
 We may change prices by giving you at least 30 days' notice. A new price applies from your first renewal
 after the notice period.

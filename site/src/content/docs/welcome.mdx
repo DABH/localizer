@@ -3,6 +3,13 @@ title: Thanks for subscribing
 description: Next steps after subscribing to Localizer.
 tableOfContents: false
 pagefind: false
+editUrl: false
+# Reached from the checkout only; kept out of search engines and of the sitemap (astro.config.mjs).
+head:
+  - tag: meta
+    attrs:
+      name: robots
+      content: noindex
 ---
 
 import { LinkCard, CardGrid, Steps } from '@astrojs/starlight/components';

@@ -9,13 +9,17 @@ rolling pull request with its own `GITHUB_TOKEN`.
 name: Localizer
 on:
   push:
-    branches: [main]
+    branches: [main] # your default branch
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
   id-token: write
+
+concurrency:
+  group: localizer # one run at a time: a second push waits
+  cancel-in-progress: false
 
 jobs:
   translations:
