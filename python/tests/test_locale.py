@@ -2,7 +2,10 @@
 # SPDX-License-Identifier: NCSA
 
 import json
+import os
 import plistlib
+import sys
+import threading
 
 import pytest
 from conftest import CONFORMANCE
@@ -94,3 +97,38 @@ def test_apple_languages():
     if not PLIST.is_file():
         pytest.skip(NO_CORPUS)
     assert loc.apple_languages(PLIST.read_bytes()) == ["ja-JP", "zh-Hans-CN", "en-US", "Français-ünicode"]
+
+
+def _plist(langs):
+    return plistlib.dumps({"AppleLanguages": langs}, fmt=plistlib.FMT_BINARY)
+
+
+def test_plist_languages_reads_regular_files_only(tmp_path):
+    """Like the Go runtime: missing, oversized and irregular files (a directory, a FIFO that would block
+    forever) all mean no preference, and nothing ever blocks."""
+    path = tmp_path / ".GlobalPreferences.plist"
+    path.write_bytes(_plist(["ja-JP", "en-US"]))
+    assert loc._plist_languages(str(path)) == ["ja-JP", "en-US"]
+    assert loc._plist_languages(str(tmp_path / "missing.plist")) == []
+    assert loc._plist_languages(str(tmp_path)) == []
+    big = tmp_path / "big.plist"
+    with open(big, "wb") as f:
+        f.truncate(loc._MAX_PLIST + 1)
+    assert loc._plist_languages(str(big)) == []
+    if hasattr(os, "mkfifo"):
+        fifo = tmp_path / "fifo.plist"
+        os.mkfifo(fifo)
+        result = []
+        t = threading.Thread(target=lambda: result.append(loc._plist_languages(str(fifo))), daemon=True)
+        t.start()
+        t.join(10)
+        assert result == [[]], "opening the FIFO blocked"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="HOME is not the home directory on Windows")
+def test_apple_languages_come_from_the_home_directory(tmp_path, monkeypatch):
+    prefs = tmp_path / "Library" / "Preferences"
+    prefs.mkdir(parents=True)
+    (prefs / ".GlobalPreferences.plist").write_bytes(_plist(["de-DE", "en-US"]))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert loc._apple_languages() == ["de-DE", "en-US"]

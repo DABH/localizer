@@ -204,7 +204,7 @@ later pushes update it.
   https://locale.dev), and the shared conformance corpus in `testdata/conformance/` (its README is the
   specification of the placeholder grammar and the engine; both runtimes run the same vectors).
 - Commands: `make` runs gofmt (check), `go vet`, the Go tests and the Python tests (needs `uv`);
-  `make python`; `cd python && uv run --with pytest --with typer --with click pytest -q`; `make site`.
+  `make python`; `cd python && uv run --with-editable . --with pytest --with typer --with click --with rich-click pytest -q`; `make site`.
   Regenerate the locale-matching golden with `go test ./internal/locale -run Golden -update`.
 - Conventions: new files carry `Copyright (c) 2026 Snizyx Software LLC. All rights reserved.` and
   `SPDX-License-Identifier: NCSA` headers; contributors sign the CLA (a bot asks on the pull request); a

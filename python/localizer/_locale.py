@@ -9,6 +9,7 @@ package; ``testdata/conformance/locale_match.json`` pins the matching results.
 from __future__ import annotations
 
 import os
+import stat
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
@@ -132,16 +133,51 @@ def os_languages() -> list[str]:
     return []
 
 
+_MAX_PLIST = 8 << 20  # .GlobalPreferences.plist is a few kilobytes; anything near this is not the file we want
+
+
 def _apple_languages() -> list[str]:
-    path = os.path.join(os.path.expanduser("~"), "Library", "Preferences", ".GlobalPreferences.plist")
+    return _plist_languages(os.path.join(os.path.expanduser("~"), "Library", "Preferences", ".GlobalPreferences.plist"))
+
+
+def _plist_languages(path: str) -> list[str]:
+    """The AppleLanguages of the property list at ``path``, or none when anything is off: the file is
+    missing or unreadable, is not a regular file (a FIFO or a device could block forever), is larger than
+    ``_MAX_PLIST``, or is malformed. This runs at every CLI startup, so it must neither block nor fail; the
+    worst outcome is English. As in the Go runtime, the open is non-blocking (a FIFO without a writer
+    returns at once; regular files are unaffected) and the checks run on the open descriptor, so nothing
+    can be swapped in between them and the read. On Windows the descriptor must be binary (the C runtime
+    would otherwise translate line endings and stop at a Ctrl-Z byte) and not inherited."""
+    flags = os.O_RDONLY
+    for name in ("O_NONBLOCK", "O_CLOEXEC", "O_BINARY", "O_NOINHERIT"):
+        flags |= getattr(os, name, 0)
     try:
-        if os.path.getsize(path) > 8 << 20:
-            return []
-        with open(path, "rb") as f:
-            data = f.read()
+        fd = os.open(path, flags)
     except OSError:
         return []
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_size > _MAX_PLIST:
+            return []
+        data = _read_up_to(fd, _MAX_PLIST + 1)
+    except OSError:
+        return []
+    finally:
+        os.close(fd)
+    if len(data) > _MAX_PLIST:
+        return []
     return apple_languages(data)
+
+
+def _read_up_to(fd: int, limit: int) -> bytes:
+    parts, size = [], 0
+    while size < limit:
+        chunk = os.read(fd, min(limit - size, 1 << 16))
+        if not chunk:
+            break
+        parts.append(chunk)
+        size += len(chunk)
+    return b"".join(parts)
 
 
 def apple_languages(data: bytes) -> list[str]:

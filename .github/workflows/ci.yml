@@ -81,21 +81,21 @@ jobs:
 
   python:
     # The Python runtime, across the framework generations it hooks (Typer 0.17 uses real Click;
-    # Typer 0.26+ bundles its own copy), the Python versions that hand Click raw docstrings (3.10-3.12)
-    # and the operating systems whose language settings it reads.
+    # Typer 0.26+ bundles its own copy; rich-click on old and current Click), the Python versions that
+    # hand Click raw docstrings (3.10-3.12) and the operating systems whose language settings it reads.
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, python: "3.10", deps: "typer==0.17.3 click==8.1.8 rich==14.0.0" }
+          - { os: ubuntu-latest, python: "3.10", deps: "typer==0.17.3 click==8.1.8 rich==14.0.0 rich-click==1.9.9" }
           - { os: ubuntu-latest, python: "3.11", deps: "typer==0.26.8" }
           - { os: ubuntu-latest, python: "3.12", deps: "click==8.1.7" }
-          - { os: ubuntu-latest, python: "3.13", deps: "typer==0.27.2 click==8.5.0" }
+          - { os: ubuntu-latest, python: "3.13", deps: "typer==0.27.2 click==8.5.0 rich-click==1.9.9" }
           - { os: ubuntu-latest, python: "3.14", deps: "click==8.5.0" }
           - { os: ubuntu-latest, python: "3.14", deps: "" }
           - { os: macos-latest, python: "3.13", deps: "typer==0.27.2" }
-          - { os: windows-latest, python: "3.13", deps: "typer==0.17.3 click==8.1.8 rich==14.0.0" }
+          - { os: windows-latest, python: "3.13", deps: "typer==0.17.3 click==8.1.8 rich==14.0.0 rich-click==1.9.9" }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
