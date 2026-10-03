@@ -80,7 +80,8 @@ Chinese (`zh-Hans`), so those users see English until you add `zh-Hant`.
 
 The runtimes include translations of the frameworks’ built-in text for Japanese, Simplified Chinese,
 Korean, Spanish, French, German and Brazilian Portuguese: Cobra’s and pflag’s help headings, `help` and
-`completion` commands and argument and flag errors (Go); Click’s, Typer’s and argparse’s usage and help
+`completion` commands and argument and flag errors, kong’s and urfave/cli’s headings, help flag and parse
+errors (Go); Click’s, Typer’s and argparse’s usage and help
 headings, `Show this message and exit.`, `[default: …]`, `[required]`, `Missing argument`, `No such
 command`, `Invalid value`, `the following arguments are required`, … across the framework versions in use
 (Python). Your catalogs take precedence over them.

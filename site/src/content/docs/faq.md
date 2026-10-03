@@ -38,7 +38,7 @@ add any language with its BCP 47 tag in [`.localizer.yml`](../reference/configur
 
 ## Which programming languages and frameworks?
 
-Go with Cobra, and Python with Typer, Click or argparse: one line each. Other Go and Python CLIs use the
+Go with Cobra, kong or urfave/cli v3, and Python with Typer, Click or argparse: one line each. Other Go and Python CLIs use the
 output helpers after `Init`/`init`. The catalog format is shared, so a CLI ported from one language to the
 other keeps its translations.
 

@@ -13,8 +13,10 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 go get github.com/DABH/localizer
 ```
 
-The library depends on Cobra (v1.8 or later), pflag, `golang.org/x/text` and `golang.org/x/sys`. It makes
-no network calls, and it has no telemetry or credentials. The full API is on
+The root package depends on Cobra (v1.8 or later), pflag, `golang.org/x/text` and `golang.org/x/sys`; the
+`kongx` and `urfave` subpackages add kong and urfave/cli v3 respectively (see the [kong](../../guides/kong/) and
+[urfave/cli](../../guides/urfave/) guides). The library makes no network calls, and it has no telemetry or
+credentials. The full API is on
 [pkg.go.dev](https://pkg.go.dev/github.com/DABH/localizer).
 
 ### Functions
