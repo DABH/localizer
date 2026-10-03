@@ -116,7 +116,7 @@ LANG=de_DE.UTF-8 uv run taskctl done 9
 | --- | --- |
 | `/` | The Go runtime library: the only package a Go CLI imports. Dependencies: cobra, pflag, x/text, x/sys. |
 | `catalog/`, `engine/`, `msgfmt/` | Catalog format, lookup engine, and placeholder grammar (Go and Python), exported for tools. |
-| `internal/` | Locale detection, and built-in translations of Cobra's own strings. |
+| `internal/` | Locale detection, and built-in translations of the supported frameworks' own strings (one directory per framework). |
 | `python/` | The Python runtime, published to PyPI as `localizer`, with its tests and a Typer demo (`python/alias/` is a compatibility distribution). |
 | `testdata/conformance/` | The shared specification and test vectors both runtimes must satisfy. |
 | `action/` | The GitHub Action. |
