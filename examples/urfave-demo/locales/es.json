@@ -1,0 +1,30 @@
+{
+  "language": "es",
+  "messages": {
+    "Add a high-priority task.": "Agrega una tarea de prioridad alta.",
+    "Add a task.": "Agrega una tarea.",
+    "Added task %d: %q": "Tarea %d agregada: %q",
+    "Changing tasks": "Modificar tareas",
+    "Completed task %d.": "Tarea %d completada.",
+    "Done": "Completada",
+    "Due date in YYYY-MM-DD format.": "Fecha de vencimiento en formato AAAA-MM-DD.",
+    "ID": "ID",
+    "Include completed tasks.": "Incluye las tareas completadas.",
+    "List tasks.": "Enumera las tareas.",
+    "Manage your tasks from the terminal.": "Gestiona sus tareas desde la terminal.",
+    "Mark a task as done.": "Marca una tarea como completada.",
+    "No tasks found.": "No se encontraron tareas.",
+    "Output format: human or json.": "Formato de salida: human o json.",
+    "Print more details.": "Muestra más detalles.",
+    "Priority": "Prioridad",
+    "Priority of the task: `level` is low, normal or high.": "Prioridad de la tarea: `level` es low, normal o high.",
+    "Task details": "Detalles de la tarea",
+    "Title": "Título",
+    "Viewing tasks": "Ver tareas",
+    "invalid priority %q: must be low, normal or high": "prioridad no válida %q: debe ser low, normal o high",
+    "task %d not found": "no se encontró la tarea %d",
+    "task ID must be a number: %w": "el ID de la tarea debe ser un número: %w",
+    "taskctl keeps a small list of tasks.\nUse it to add, list and complete tasks.": "taskctl mantiene una pequeña lista de tareas.\nÚselo para agregar, enumerar y completar tareas."
+  },
+  "version": 1
+}
