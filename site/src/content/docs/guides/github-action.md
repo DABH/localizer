@@ -8,9 +8,8 @@ with its short-lived GitHub OIDC token, so there is no API key to store. Localiz
 to your repository: the service returns the updated catalogs, and your workflow pushes the branch and opens
 the pull request with the `github-token` input (its own `GITHUB_TOKEN` by default).
 
-:::note[Private preview]
-During the preview, the service accepts workflows from accounts that have access.
-[Request access](https://github.com/DABH/localizer/issues/new?template=access.yml).
+:::note[Subscription]
+The service accepts workflows from GitHub accounts with a subscription: see [Pricing](/pricing/).
 :::
 
 ## Set up

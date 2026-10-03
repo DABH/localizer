@@ -178,7 +178,8 @@ jobs:
 
 (and tell the user to enable **Settings → Actions → General → Allow GitHub Actions to create and approve
 pull requests**), or tell the user to install the GitHub App: https://locale.dev/guides/github-app/. The
-service accepts public repositories only. The first run opens a pull request with translated catalogs;
+service accepts public repositories only and needs a subscription for the repository's GitHub account
+(https://locale.dev/pricing/); tell the user if they don't have one. The first run opens a pull request with translated catalogs;
 later pushes update it.
 
 ### 9. What not to do

@@ -1,0 +1,30 @@
+---
+title: Thanks for subscribing
+description: Next steps after subscribing to Localizer.
+tableOfContents: false
+pagefind: false
+---
+
+import { LinkCard, CardGrid, Steps } from '@astrojs/starlight/components';
+
+Your subscription is active as soon as Polar confirms the payment, usually within a minute. Polar has
+emailed you a receipt and a link to its customer portal, where you can manage the subscription.
+
+<Steps>
+
+1. **Connect a repository** of the account you subscribed for, with the GitHub Action or the GitHub App.
+
+2. **Merge the onboarding pull request.** It adds the configuration, one catalog per language and the
+   one-line integration.
+
+3. **Keep shipping.** When your strings change, the translations pull request updates itself.
+
+</Steps>
+
+<CardGrid>
+	<LinkCard title="Getting started" description="The whole setup, step by step." href="/getting-started/" />
+	<LinkCard title="GitHub Action" description="Keep translations in sync from your own workflow." href="/guides/github-action/" />
+	<LinkCard title="GitHub App" description="Install it and merge the pull requests it opens." href="/guides/github-app/" />
+</CardGrid>
+
+Questions or trouble? Email [saluton@locale.dev](mailto:saluton@locale.dev).

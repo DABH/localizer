@@ -71,4 +71,5 @@ code, you can maintain catalogs yourself; the runtime library works the same way
 ## What does it cost?
 
 The runtime library is free and open source under the University of Illinois/NCSA Open Source License.
-The hosted translation service is in private preview.
+The hosted translation service is a monthly subscription for the GitHub account that owns your
+repositories: Solo ($12), Team ($39) and Enterprise ($199), or a custom contract. See [Pricing](/pricing/).

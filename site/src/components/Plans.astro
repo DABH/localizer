@@ -1,0 +1,269 @@
+---
+// The pricing table and the GitHub account picker. Checkout runs on the Localizer service
+// (api.locale.dev/v1/checkout), which creates a Polar checkout for the chosen plan and account.
+// Product IDs are Polar's; a plan without one shows as unavailable.
+const checkout = 'https://api.locale.dev/v1/checkout';
+
+const plans = [
+	{
+		key: 'solo',
+		name: 'Solo',
+		price: '$12',
+		who: 'For individual developers',
+		product: '2677e7ad-eab2-470e-a6cb-63ac2ffd54e6',
+		personalOnly: true,
+		features: [
+			'4,000 translations per month',
+			'Personal GitHub accounts',
+			'All public repositories of your account',
+			'GitHub App or GitHub Action',
+			'Email support',
+		],
+	},
+	{
+		key: 'team',
+		name: 'Team',
+		price: '$39',
+		who: 'For organizations with fewer than 100 employees',
+		product: '67b27372-7885-42ad-b78a-8c4ff063cc9b',
+		personalOnly: false,
+		features: [
+			'15,000 translations per month',
+			'All public repositories of one account',
+			'GitHub App or GitHub Action',
+			'Email support',
+		],
+	},
+	{
+		key: 'enterprise',
+		name: 'Enterprise',
+		price: '$199',
+		who: 'For organizations of any size',
+		product: '9d12e6d6-92fa-4ad7-bad1-747dc2cbdacc',
+		personalOnly: false,
+		features: [
+			'60,000 translations per month',
+			'All public repositories of one account',
+			'99.9% uptime SLA with service credits',
+			'Support answered within one business day',
+			'Security questionnaire and DPA on request',
+		],
+	},
+];
+---
+
+<form class="account" id="account-form" novalidate>
+	<label for="account-input">GitHub account that owns your repositories</label>
+	<div class="account-row">
+		<input id="account-input" name="account" type="text" autocomplete="off" spellcheck="false"
+			placeholder="your-username or your-org" required pattern="[A-Za-z0-9][A-Za-z0-9-]{0,38}" />
+		<button type="submit">Choose account</button>
+	</div>
+	<p class="account-status" id="account-status" aria-live="polite">
+		A subscription covers every public repository of one GitHub account, personal or organization.
+	</p>
+</form>
+
+<div class="plans">
+	{plans.map((p) => (
+		<section class="plan" data-plan={p.key} data-product={p.product} data-personal-only={p.personalOnly ? 'true' : 'false'}>
+			<h3>{p.name}</h3>
+			<p class="price"><span>{p.price}</span> / month</p>
+			<p class="who">{p.who}</p>
+			<ul>{p.features.map((f) => <li>{f}</li>)}</ul>
+			<a class="subscribe" aria-disabled="true" role="link" data-base={checkout}>Choose an account above</a>
+		</section>
+	))}
+	<section class="plan custom">
+		<div>
+			<h3>Custom</h3>
+			<p class="who">
+				For large organizations: annual contracts and invoicing, an allowance and terms to fit, and help
+				with security reviews and procurement.
+			</p>
+		</div>
+		<a class="subscribe ready" href="mailto:saluton@locale.dev?subject=Localizer%20Custom%20plan">Contact us</a>
+	</section>
+</div>
+
+<noscript><p>Choosing an account needs JavaScript. You can also email <a href="mailto:saluton@locale.dev">saluton@locale.dev</a>.</p></noscript>
+
+<script>
+	type Account = { id: number; login: string; type: string; avatar_url: string };
+
+	const form = document.getElementById('account-form') as HTMLFormElement;
+	const input = document.getElementById('account-input') as HTMLInputElement;
+	const status = document.getElementById('account-status') as HTMLParagraphElement;
+	const loginRe = /^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/;
+
+	function setPlans(account: Account | null) {
+		for (const plan of document.querySelectorAll<HTMLElement>('.plan[data-plan]')) {
+			const link = plan.querySelector<HTMLAnchorElement>('.subscribe')!;
+			const product = plan.dataset.product ?? '';
+			const personalOnly = plan.dataset.personalOnly === 'true';
+			let label = 'Subscribe';
+			let href = '';
+			if (!product) {
+				label = 'Not available yet';
+			} else if (!account) {
+				label = 'Choose an account above';
+			} else if (personalOnly && account.type !== 'User') {
+				label = 'Personal accounts only';
+			} else {
+				const q = new URLSearchParams({ product, account: account.login, account_id: String(account.id) });
+				href = `${link.dataset.base}?${q}`;
+				label = `Subscribe for ${account.login}`;
+			}
+			link.textContent = label;
+			if (href) {
+				link.href = href;
+				link.removeAttribute('aria-disabled');
+				link.classList.add('ready');
+			} else {
+				link.removeAttribute('href');
+				link.setAttribute('aria-disabled', 'true');
+				link.classList.remove('ready');
+			}
+		}
+	}
+
+	form.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const login = input.value.trim().replace(/^@/, '');
+		if (!loginRe.test(login)) {
+			status.textContent = 'That isn’t a valid GitHub username or organization name.';
+			setPlans(null);
+			return;
+		}
+		status.textContent = 'Looking it up on GitHub…';
+		try {
+			const res = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}`, {
+				headers: { Accept: 'application/vnd.github+json' },
+			});
+			if (res.status === 404) {
+				status.textContent = `There is no GitHub account named “${login}”.`;
+				setPlans(null);
+				return;
+			}
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			const account = (await res.json()) as Account;
+			const kind = account.type === 'User' ? 'personal account' : 'organization';
+			status.textContent = `${account.login} (${kind}). Choose a plan below; you’ll pay on Polar, our merchant of record.`;
+			setPlans(account);
+		} catch {
+			status.textContent = 'GitHub didn’t answer. Please try again in a minute.';
+			setPlans(null);
+		}
+	});
+
+	setPlans(null);
+</script>
+
+<style>
+	.account {
+		margin-block: 1.5rem 2rem;
+	}
+	.account label {
+		display: block;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+	}
+	.account-row {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.account input {
+		flex: 1 1 16rem;
+		padding: 0.55rem 0.75rem;
+		border: 1px solid var(--sl-color-gray-4);
+		border-radius: 0.5rem;
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font: inherit;
+	}
+	.account button,
+	.subscribe {
+		padding: 0.55rem 1rem;
+		border: 0;
+		border-radius: 0.5rem;
+		background: var(--sl-color-accent);
+		color: var(--sl-color-white);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	:root[data-theme='light'] .account button,
+	:root[data-theme='light'] .subscribe.ready {
+		color: #fff;
+	}
+	.account-status {
+		margin-top: 0.5rem;
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+	}
+	.plans {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+	.plan {
+		display: flex;
+		flex-direction: column;
+		margin: 0 !important;
+		padding: 1.25rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.75rem;
+		background: var(--sl-color-gray-7, var(--sl-color-black));
+	}
+	.plan h3 {
+		margin: 0;
+	}
+	.plan .price {
+		margin: 0.5rem 0 0;
+		color: var(--sl-color-gray-2);
+	}
+	.plan .price span {
+		color: var(--sl-color-white);
+		font-size: 1.75rem;
+		font-weight: 700;
+	}
+	.plan .who {
+		margin: 0.25rem 0 0;
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+	}
+	.plan ul {
+		flex: 1;
+		margin: 1rem 0;
+		padding-inline-start: 1.1rem;
+		font-size: var(--sl-text-sm);
+	}
+	.subscribe {
+		display: block;
+		margin-top: auto;
+		text-align: center;
+		text-decoration: none;
+	}
+	.plan.custom {
+		grid-column: 1 / -1;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem 1.5rem;
+	}
+	.plan.custom > div {
+		flex: 1 1 20rem;
+	}
+	.plan.custom .subscribe {
+		margin-top: 0;
+		flex: 0 0 auto;
+	}
+	.subscribe:not(.ready) {
+		background: var(--sl-color-gray-5);
+		color: var(--sl-color-gray-2);
+		cursor: default;
+	}
+</style>
