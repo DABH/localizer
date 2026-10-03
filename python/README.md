@@ -15,8 +15,8 @@ pip install localizer
 ```
 
 Python 3.10 or newer, no dependencies. Works with Click 8.1+, Typer 0.17+ (including Typer's
-bundled Click: help, errors, the prompt text and Click's own prompt messages) and the standard
-library's argparse.
+bundled Click: help, errors, the prompt text and Click's own prompt messages), rich-click 1.9+ (its
+help panels, table labels and error panels) and the standard library's argparse.
 
 ## One line
 
@@ -105,7 +105,13 @@ preferred languages on macOS and Windows; the best available catalog wins, Engli
 `LOCALIZER_LANG=qps` pseudo-localizes every translatable string (`⟦Ûšáĝé:⟧`) so you can see what is
 covered without a catalog. `LOCALIZER_DEBUG=1` reports untranslated strings and swallowed hook errors
 on stderr; `LOCALIZER_DUMP=path.json` writes the help tree with a translated/untranslated flag per
-entry.
+entry (to a new file, never over an existing one, and never in a root or setuid process).
+
+If `sys.stdout` or `sys.stderr` cannot encode the catalog's text, output stays in English rather than
+failing with `UnicodeEncodeError`. On Windows that is the case for output redirected to a file or a
+pipe, which uses the ANSI code page unless Python runs in UTF-8 mode: set `PYTHONUTF8=1` (or
+`PYTHONIOENCODING=utf-8`) to get translations there; the console itself, including Windows Terminal,
+is UTF-8 already. `LOCALIZER_DEBUG=1` names the stream and encoding.
 
 Pin your tests to English so snapshots don't depend on the machine's locale:
 

@@ -53,7 +53,8 @@ pip install localizer   # import name: localizer
 
 Python 3.10 or later, no dependencies. It hooks Click 8.1 and later, Typer 0.17 and later (including the
 copy of Click that Typer 0.26+ bundles: its help, its errors, the prompt text and Click’s own prompt
-messages) and the standard library’s argparse; the frameworks are optional.
+messages), rich-click 1.9 and later (its help panels, table labels and error panels) and the standard
+library’s argparse; the frameworks are optional.
 It makes no network calls, and it has no telemetry or credentials.
 
 ### Functions
@@ -90,7 +91,7 @@ The same in both runtimes:
 | `LOCALIZER_LANG=en` or `off` | Disable localization. |
 | `LOCALIZER_LANG=qps` | Pseudo-localization: every known string is shown as `⟦Ŝţŕîñĝ⟧`, so strings that don’t go through Localizer stand out. |
 | `LOCALIZER_DEBUG=1` | Report on stderr each help string that has no translation, as it renders (`localizer: untranslated (ja): "Add a task."`), and internal failures that were swallowed, such as a catalog that fails to load or a hook that failed. Misses in output and error messages aren’t reported. |
-| `LOCALIZER_DUMP=<file>` | Write every help string in the command tree as JSON, with hit or miss (see [Testing](../../guides/testing/)). Go creates the file new, never overwriting one, and ignores the variable in a root or setuid process. |
+| `LOCALIZER_DUMP=<file>` | Write every help string in the command tree as JSON, with hit or miss (see [Testing](../../guides/testing/)). Both runtimes create the file new (an existing file is never overwritten) and ignore the variable in a root or setuid process. |
 
 ## Language selection
 
@@ -112,3 +113,15 @@ Localizer uses the first of these that is set:
 normalized to BCP 47 (`pt_BR.UTF-8` becomes `pt-BR`; `zh_TW` becomes `zh-TW`, which matches a `zh-Hant`
 catalog but never `zh-Hans`) and matched to your catalogs. Only confident matches are used. Both runtimes
 implement the same detection and matching rules and are tested against the same cases.
+
+## Output encoding (Python)
+
+Before a language is used, the Python runtime checks that `sys.stdout` and `sys.stderr` can encode the
+catalog’s text. When one of them can’t, output stays in English, and `LOCALIZER_DEBUG=1` says why
+(`localizer: stdout (cp1252) cannot encode the ja catalog; output stays in English`). This is the situation
+on Windows when output goes to a file or a pipe: Python then encodes with the ANSI code page (`cp1252`,
+`cp932`, …), and a translated help screen would otherwise end in `UnicodeEncodeError`, or in `\uXXXX`
+escapes where the stream’s error handler allows it. Output to the console itself, including Windows
+Terminal, is UTF-8 and unaffected. To get translations through pipes and files as well, run Python in UTF-8
+mode: set `PYTHONUTF8=1` (or `PYTHONIOENCODING=utf-8`) in the environment. UTF-8 and UTF-16/32 streams
+skip the check; for any other encoding the catalog is encoded once, a fraction of a millisecond.

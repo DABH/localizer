@@ -9,8 +9,10 @@ Not noticeably, but it isn’t free. Deciding the language reads a few environme
 them is set, the operating system’s language setting, which on macOS is read from a preferences file; either
 takes well under a millisecond.
 For a language other than English, one catalog is decoded at startup: a few milliseconds for a CLI with
-thousands of strings; the Python runtime also installs its hooks then (about 10 ms in all) and costs about
-25 ms to import (Python 3.13 on a recent laptop). Help is translated only when it’s shown.
+thousands of strings. The Python runtime costs about 25 ms to import and about 5 ms to select the language,
+load the catalogs and install its hooks (Python 3.13 on a recent laptop, measured on the Typer demo in
+`python/examples/taskctl`). It imports nothing of Rich or of Typer’s help renderer itself; those load when
+help or an error is shown, as they would without Localizer. Help is translated only when it’s shown.
 
 ## Does it make network calls or collect data?
 

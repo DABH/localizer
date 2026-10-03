@@ -91,6 +91,9 @@ The one line translates:
 - `prompt`/`confirm` texts, and Click’s own prompt messages (`Repeat for confirmation`, `Error: invalid
   input`, …) — with the copy of Click bundled with Typer 0.26 and later as well.
 
+rich-click (1.9 and later) commands and groups are handled like Click’s, including their option and command
+panels, the labels in their tables (`[default: …]`, `[env var: …]`) and their error panels.
+
 Options: `env_var="YOURCLI_LANG"` adds an application-specific override variable; `language="de"` forces
 a language; `without_error_hook=True` and `without_prompt_hook=True` switch those hooks off.
 </TabItem>
@@ -213,5 +216,8 @@ To see which strings don’t go through Localizer yet, run your CLI with pseudo-
   usually longer than English; check narrow terminals.
 - Rich markup (`[bold]…[/]`) and Markdown in help are preserved; a translation that breaks Rich markup
   falls back to English at render time.
+- Output stays in English when `sys.stdout` or `sys.stderr` cannot encode the catalog’s text: on Windows,
+  output redirected to a file or pipe without `PYTHONUTF8=1` (see
+  [Output encoding](../../reference/runtime/#output-encoding-python)).
 </TabItem>
 </Tabs>
